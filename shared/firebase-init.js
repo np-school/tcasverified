@@ -30,4 +30,4 @@ const CURRENT_ACADEMIC_YEAR = 2569;
 
 // ⚠️ ต้องแก้หลัง deploy Cloud Function แล้ว (ดู functions-drive-upload/DEPLOY.md)
 // ใช้อัปโหลดเกียรติบัตรเข้าโฟลเดอร์ Google Drive กลางของโรงเรียน แทน Firebase Storage
-const DRIVE_UPLOAD_URL = "https://upload-certificate-833446074097.asia-southeast3.run.app";
+const DRIVE_UPLOAD_URL = "https://upload-certificate-572850097735.asia-southeast3.run.app";
