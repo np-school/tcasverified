@@ -79,12 +79,14 @@ exports.uploadCertificate = async (req, res) => {
       },
       media: { mimeType, body: Readable.from(buffer) },
       fields: "id, webViewLink",
+      supportsAllDrives: true, // จำเป็นเมื่อ DRIVE_FOLDER_ID อยู่ใน Shared Drive
     });
 
     // ── 4. แชร์สิทธิ์อ่านให้ทุกคนในโดเมนโรงเรียน (ไม่เปิด public) ──
     await drive.permissions.create({
       fileId: created.data.id,
       requestBody: { type: "domain", domain: ALLOWED_DOMAIN, role: "reader" },
+      supportsAllDrives: true, // จำเป็นเมื่อ DRIVE_FOLDER_ID อยู่ใน Shared Drive
     });
 
     return res.status(200).json({ fileId: created.data.id, url: created.data.webViewLink });
