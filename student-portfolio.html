@@ -67,7 +67,7 @@
 <div class="shell">
   <div class="sidebar">
     <a class="sidebar-btn" href="student-history.html"><i data-lucide="history" style="width:18px;height:18px"></i>ประวัติการส่ง</a>
-    <a class="sidebar-btn" href="student-submit.html"><i data-lucide="plus-circle" style="width:18px;height:18px"></i>ส่งกิจกรรมใหม่</a>
+    <button class="sidebar-btn" onclick="openSubmitModal()"><i data-lucide="plus-circle" style="width:18px;height:18px"></i>ส่งกิจกรรมใหม่</button>
     <a class="sidebar-btn active" href="student-portfolio.html"><i data-lucide="award" style="width:18px;height:18px"></i>แฟ้มผลงาน</a>
     <a class="sidebar-btn" href="onboarding.html"><i data-lucide="user-circle" style="width:18px;height:18px"></i>ข้อมูลส่วนตัว</a>
   </div>
@@ -100,6 +100,7 @@
 <script src="shared/firebase-init.js"></script>
 <script src="shared/auth-guard.js"></script>
 <script src="shared/status-meta.js"></script>
+<script src="shared/submit-modal.js"></script>
 <script src="js/student-portfolio.js"></script>
 </body>
 </html>

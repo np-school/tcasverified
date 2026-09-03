@@ -26,6 +26,8 @@ guardPage(["student", "admin"], (ctx) => {
   currentProfile = ctx.profile;
   document.getElementById("userLabel").textContent = ctx.profile.firstName + " " + ctx.profile.lastName;
   loadCertified(ctx.user.uid);
+
+  initSubmitModal(ctx, { onSubmitted: () => loadCertified(ctx.user.uid) });
 });
 
 async function loadCertified(uid) {

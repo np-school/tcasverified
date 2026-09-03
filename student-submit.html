@@ -4,134 +4,14 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>ส่งกิจกรรมใหม่ – NP-TCAS Verified</title>
-<link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-<link href="shared/styles.css" rel="stylesheet">
-<script src="https://unpkg.com/lucide@1.24.0"></script>
+<!--
+  "ส่งกิจกรรมใหม่" ไม่ใช่หน้าแยกอีกต่อไป — ยุบไปเป็น modal ที่เปิดจากหน้า
+  student-history.html / student-portfolio.html แทน (ดู shared/submit-modal.js)
+  ไฟล์นี้เก็บไว้เผื่อมีลิงก์เก่า/บุ๊กมาร์กมาที่ URL นี้โดยตรง จะได้ไม่เจอ 404
+  แล้วเด้งไปเปิด modal ที่หน้าประวัติการส่งให้อัตโนมัติ
+-->
+<meta http-equiv="refresh" content="0; url=student-history.html?submit=1">
+<script>window.location.replace("student-history.html?submit=1");</script>
 </head>
-<body>
-
-<div id="loadingOverlay"><div class="spinner"></div><p style="color:var(--text2);font-size:14px;font-weight:700;">กำลังตรวจสอบสิทธิ์...</p></div>
-<div id="toast"></div>
-
-<div class="navbar blue"><div class="navbar-inner">
-  <div class="navbar-brand">
-    <div class="navbar-mark"><i data-lucide="badge-check" style="width:20px;height:20px"></i></div>
-    <div><div class="navbar-title">NP-TCAS Verified</div><div class="navbar-subtitle">โรงเรียนหนองกี่พิทยาคม</div></div>
-  </div>
-  <div class="navbar-user"><span id="userLabel"></span><button class="navbar-logout" onclick="signOutUser()" title="ออกจากระบบ"><i data-lucide="log-out" style="width:16px;height:16px"></i></button></div>
-</div></div>
-
-<div class="shell">
-  <div class="sidebar">
-    <a class="sidebar-btn" href="student-history.html"><i data-lucide="history" style="width:18px;height:18px"></i>ประวัติการส่ง</a>
-    <a class="sidebar-btn active" href="student-submit.html"><i data-lucide="plus-circle" style="width:18px;height:18px"></i>ส่งกิจกรรมใหม่</a>
-    <a class="sidebar-btn" href="student-portfolio.html"><i data-lucide="award" style="width:18px;height:18px"></i>แฟ้มผลงาน</a>
-    <a class="sidebar-btn" href="onboarding.html"><i data-lucide="user-circle" style="width:18px;height:18px"></i>ข้อมูลส่วนตัว</a>
-  </div>
-  <div class="content" style="max-width:640px;">
-    <div class="page-header"><div class="page-title">ส่งกิจกรรมใหม่</div><div class="page-sub">แนบเกียรติบัตรหรือหลักฐานให้ครบ เพื่อให้ครูตรวจสอบได้เร็วขึ้น</div></div>
-
-    <form id="submitForm" class="form-section">
-      <div class="form-grid">
-        <div class="field full">
-          <label>รูปแบบข้อมูล <span class="req">*</span></label>
-          <select id="f_recordtype" required>
-            <option value="">- เลือกรูปแบบ -</option>
-            <option value="activity">กิจกรรม</option>
-            <option value="project">โครงงาน</option>
-            <option value="award">รางวัล</option>
-            <option value="course">หลักสูตรอบรม</option>
-          </select>
-          <div class="hint" id="f_recordtype_hint">เลือกรูปแบบข้อมูลก่อน ระบบจะแสดงช่องกรอกที่ตรงกับประเภทนั้นให้อัตโนมัติ</div>
-        </div>
-
-        <div class="field full" id="f_title_wrap"><label id="f_title_label">ชื่อรายการ <span class="req">*</span></label><input id="f_title" required placeholder="เช่น ค่ายอบรมผู้นำเยาวชนอาเซียน"></div>
-
-        <!-- เฉพาะ "กิจกรรม" -->
-        <div class="field full rt-group" data-rt="activity" style="display:none;">
-          <label>บทบาท / ผลที่ได้รับ <span class="req">*</span></label>
-          <input id="f_role" placeholder="เช่น ผู้เข้าร่วม, ประธานทีม, ผ่านการอบรม">
-        </div>
-
-        <!-- เฉพาะ "โครงงาน" -->
-        <div class="field rt-group" data-rt="project" style="display:none;">
-          <label>ประเภท/สาขาโครงงาน <span class="req">*</span></label>
-          <select id="f_projecttype">
-            <option value="">- เลือกสาขา -</option>
-            <option value="วิทยาศาสตร์">วิทยาศาสตร์</option>
-            <option value="คอมพิวเตอร์">คอมพิวเตอร์</option>
-            <option value="สังคมศาสตร์">สังคมศาสตร์</option>
-            <option value="อื่นๆ">อื่นๆ</option>
-          </select>
-        </div>
-
-        <!-- เฉพาะ "รางวัล" -->
-        <div class="field rt-group" data-rt="award" style="display:none;">
-          <label>ชื่อรางวัลที่ได้รับ <span class="req">*</span></label>
-          <input id="f_prizename" placeholder="เช่น เหรียญทอง, รางวัลชนะเลิศ, ชมเชย">
-        </div>
-
-        <!-- เฉพาะ "หลักสูตรอบรม" -->
-        <div class="field rt-group" data-rt="course" style="display:none;">
-          <label>หมวดหมู่หลักสูตร</label>
-          <input id="f_coursecategory" placeholder="เช่น คอร์สออนไลน์ (MOOC)">
-        </div>
-        <div class="field rt-group" data-rt="course" style="display:none;">
-          <label>คะแนน/ผลสอบ (ถ้ามี)</label>
-          <input id="f_score" placeholder="เช่น 85/100">
-        </div>
-        <div class="field rt-group" data-rt="course" style="display:none;">
-          <label>วันหมดอายุใบรับรอง (ถ้ามี)</label>
-          <input id="f_expired" type="date">
-        </div>
-
-        <div class="field"><label>หมวดหมู่กิจกรรม (TCAS Certified) <span class="req">*</span></label>
-          <select id="f_type" required><option value="">- เลือกหมวดหมู่ -</option></select>
-          <div class="hint" id="f_type_hint">เลือกหมวดหมู่ตามเกณฑ์ TCAS Certified (T-C-A-S)</div>
-        </div>
-        <div class="field"><label>กลุ่มสาระที่เกี่ยวข้อง <span class="req">*</span></label>
-          <select id="f_department" required><option value="">- เลือกกลุ่มสาระ -</option></select>
-          <div class="hint">ใช้ส่งให้ครูประจำกลุ่มสาระนี้เป็นผู้ตรวจสอบ</div>
-        </div>
-        <div class="field"><label>ระดับ <span class="req">*</span></label>
-          <select id="f_level" required>
-            <option value="">- เลือกระดับ -</option>
-            <option value="school">ระดับโรงเรียน</option>
-            <option value="regional">ระดับภูมิภาค/จังหวัด</option>
-            <option value="national">ระดับประเทศ</option>
-            <option value="international">ระดับนานาชาติ</option>
-          </select>
-        </div>
-        <div class="field"><label>จำนวนชั่วโมง (ถ้ามี)</label><input id="f_hours" type="number" min="0" placeholder="เช่น 12"></div>
-        <div class="field"><label>วันที่เริ่มกิจกรรม <span class="req">*</span></label><input id="f_date" type="date" required></div>
-        <div class="field"><label>วันที่สิ้นสุด (ถ้ามีมากกว่า 1 วัน)</label><input id="f_enddate" type="date"></div>
-        <div class="field"><label>ปีการศึกษา <span class="req">*</span></label><select id="f_year" required></select></div>
-        <div class="field full"><label>รายละเอียดเพิ่มเติม (ถ้ามี)</label><textarea id="f_desc" rows="3" placeholder="อธิบายเพิ่มเติมเกี่ยวกับกิจกรรม/โครงงาน/รางวัล/หลักสูตร"></textarea></div>
-        <div class="field full">
-          <label>ไฟล์เกียรติบัตร / หลักฐาน <span class="req">*</span></label>
-          <label class="upload-box" id="uploadBox" for="f_file">
-            <i data-lucide="upload-cloud" style="width:22px;height:22px;margin-bottom:6px;"></i>
-            <div id="uploadLabel">คลิกเพื่อเลือกไฟล์ (PDF หรือรูปภาพ ไม่เกิน 6MB) — จะถูกเก็บใน Google Drive กลางของโรงเรียน</div>
-          </label>
-          <input id="f_file" type="file" accept=".pdf,image/*" required style="display:none;">
-        </div>
-      </div>
-    </form>
-
-    <div style="display:flex;justify-content:flex-end;gap:10px;margin-top:16px;">
-      <a class="btn-secondary" href="student-history.html">ยกเลิก</a>
-      <button type="submit" form="submitForm" class="btn-primary" id="submitBtn" style="padding:11px 22px;font-size:14px;">
-        <i data-lucide="send" style="width:15px;height:15px"></i>ส่งกิจกรรม
-      </button>
-    </div>
-  </div>
-</div>
-
-<script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-auth-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore-compat.js"></script>
-<script src="shared/firebase-init.js"></script>
-<script src="shared/auth-guard.js"></script>
-<script src="js/student-submit.js"></script>
-</body>
+<body></body>
 </html>

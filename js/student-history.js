@@ -19,6 +19,13 @@ guardPage(["student", "admin"], (ctx) => {
   document.getElementById("userLabel").textContent = ctx.profile.firstName + " " + ctx.profile.lastName;
   buildYearFilter();
   loadActivities(ctx.user.uid);
+
+  initSubmitModal(ctx, { onSubmitted: () => loadActivities(ctx.user.uid) });
+  // รองรับลิงก์เก่าที่เคยพาไปหน้า student-submit.html โดยตรง ให้เด้งเปิด modal นี้แทน
+  if (new URLSearchParams(window.location.search).get("submit") === "1") {
+    openSubmitModal();
+    history.replaceState(null, "", "student-history.html");
+  }
 });
 
 function buildYearFilter() {
