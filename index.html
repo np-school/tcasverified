@@ -10,17 +10,31 @@
 <style>
   body{background:var(--bg);}
 
-  /* ── Navbar โลโก้ระบบ ── */
+  /* ── Navbar โลโก้ระบบ + ปุ่มเข้าสู่ระบบ ── */
   .navbar-mark-img{width:38px;height:38px;border-radius:10px;background:#fff;object-fit:contain;padding:4px;flex-shrink:0;}
+  .navbar-login{background:#fff;border:none;color:var(--accent-dark);display:flex;align-items:center;gap:8px;padding:9px 16px;border-radius:10px;font-weight:700;font-size:13px;cursor:pointer;white-space:nowrap;flex-shrink:0;}
+  .navbar-login:hover{background:var(--bg-alt);}
 
-  /* ── Hero: การ์ดล็อกอิน วางบนพื้นหลังอ่อน แยกสัดส่วนจากโซนผลงานชัดเจน ── */
-  .hero{background:linear-gradient(180deg,var(--accent-tint) 0%,var(--bg) 100%);padding:48px 20px 56px;}
-  .login-wrap{min-height:auto;padding:0;display:flex;align-items:center;justify-content:center;}
-  .login-mark{background:#fff;border:1px solid var(--border);padding:10px;}
-  .login-mark img{width:100%;height:100%;object-fit:contain;border-radius:8px;}
+  /* ── โซนวิธีใช้งานสำหรับนักเรียน ── */
+  .guide{max-width:1160px;margin:0 auto;padding:32px 20px 4px;}
+  .guide-panel{background:#fff;border:1px solid var(--border);border-radius:20px;box-shadow:0 2px 10px rgba(0,0,0,.04);padding:24px 26px 26px;}
+  .guide-header{display:flex;align-items:center;gap:10px;margin-bottom:18px;}
+  .guide-mark{width:40px;height:40px;border-radius:11px;background:var(--c-green-pale);color:var(--c-green-deep);display:flex;align-items:center;justify-content:center;flex-shrink:0;}
+  .guide-title{font-size:16.5px;font-weight:800;}
+  .guide-sub{font-size:12.5px;color:var(--text2);margin-top:2px;}
+  .guide-steps{display:grid;grid-template-columns:repeat(auto-fit,minmax(190px,1fr));gap:14px;}
+  .guide-step{background:var(--bg-alt);border-radius:14px;padding:16px 14px;}
+  .guide-step-num{width:26px;height:26px;border-radius:50%;background:var(--accent);color:#fff;font-size:12.5px;font-weight:800;display:flex;align-items:center;justify-content:center;margin-bottom:10px;}
+  .guide-step-title{font-size:13px;font-weight:700;margin-bottom:4px;display:flex;align-items:center;gap:6px;color:var(--text);}
+  .guide-step-desc{font-size:11.5px;color:var(--text2);line-height:1.55;}
+
+  @media (max-width:480px){
+    .navbar-login span{display:none;}
+    .navbar-login{padding:9px;}
+  }
 
   /* ── โซนผลงาน: จัดเป็น panel แยกสัดส่วนชัดเจนจาก hero ── */
-  .showcase{max-width:1160px;margin:0 auto;padding:0 20px 60px;}
+  .showcase{max-width:1160px;margin:0 auto;padding:28px 20px 60px;}
   .showcase-panel{background:#fff;border:1px solid var(--border);border-radius:20px;box-shadow:0 2px 10px rgba(0,0,0,.04);padding:26px 26px 30px;}
   .showcase-header{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;border-bottom:1px solid var(--border-soft);padding-bottom:16px;margin-bottom:20px;}
   .showcase-heading{display:flex;align-items:center;gap:10px;}
@@ -69,26 +83,51 @@
         <div class="navbar-subtitle">โรงเรียนหนองกี่พิทยาคม</div>
       </div>
     </div>
+    <button class="navbar-login" id="loginBtn" title="ใช้ได้เฉพาะอีเมล @nongki.ac.th เท่านั้น">
+      <svg width="16" height="16" viewBox="0 0 18 18"><path fill="#4285F4" d="M17.64 9.2c0-.64-.06-1.25-.16-1.84H9v3.48h4.84a4.14 4.14 0 0 1-1.8 2.72v2.26h2.9c1.7-1.56 2.7-3.87 2.7-6.62z"/><path fill="#34A853" d="M9 18c2.43 0 4.47-.8 5.96-2.18l-2.9-2.26c-.81.54-1.84.86-3.06.86-2.35 0-4.34-1.59-5.05-3.72H.96v2.33A9 9 0 0 0 9 18z"/><path fill="#FBBC05" d="M3.95 10.7A5.4 5.4 0 0 1 3.68 9c0-.59.1-1.17.27-1.7V4.97H.96A9 9 0 0 0 0 9c0 1.45.35 2.83.96 4.03z"/><path fill="#EA4335" d="M9 3.58c1.32 0 2.51.45 3.44 1.35l2.58-2.58C13.46.89 11.43 0 9 0A9 9 0 0 0 .96 4.97L3.95 7.3C4.66 5.17 6.65 3.58 9 3.58z"/></svg>
+      <span>เข้าสู่ระบบด้วย Google โรงเรียน</span>
+    </button>
   </div>
 </header>
 
-<div class="hero">
-  <div class="login-wrap">
-    <div class="login-card">
-      <div class="login-mark">
-        <img src="https://firebasestorage.googleapis.com/v0/b/np-webapp-74616.firebasestorage.app/o/img%2Flogo_np.gif?alt=media&token=caa0869b-c98f-4ad3-8ee9-930e8789602e" alt="ตราโรงเรียนหนองกี่พิทยาคม">
+<section class="guide">
+  <div class="guide-panel">
+    <div class="guide-header">
+      <div class="guide-mark"><i data-lucide="graduation-cap" style="width:19px;height:19px"></i></div>
+      <div>
+        <div class="guide-title">วิธีการใช้งานสำหรับนักเรียน</div>
+        <div class="guide-sub">5 ขั้นตอน ตั้งแต่เข้าสู่ระบบจนผลงานถูกยืนยันครบ</div>
       </div>
-      <div style="font-size:19px;font-weight:800;">NP-TCAS Verified</div>
-      <div style="font-size:13px;color:var(--text2);margin-top:6px;">ระบบส่งและยืนยันรายงานกิจกรรม อบรม และเกียรติบัตร<br>โรงเรียนหนองกี่พิทยาคม</div>
-
-      <button class="google-btn" id="loginBtn">
-        <svg width="18" height="18" viewBox="0 0 18 18"><path fill="#4285F4" d="M17.64 9.2c0-.64-.06-1.25-.16-1.84H9v3.48h4.84a4.14 4.14 0 0 1-1.8 2.72v2.26h2.9c1.7-1.56 2.7-3.87 2.7-6.62z"/><path fill="#34A853" d="M9 18c2.43 0 4.47-.8 5.96-2.18l-2.9-2.26c-.81.54-1.84.86-3.06.86-2.35 0-4.34-1.59-5.05-3.72H.96v2.33A9 9 0 0 0 9 18z"/><path fill="#FBBC05" d="M3.95 10.7A5.4 5.4 0 0 1 3.68 9c0-.59.1-1.17.27-1.7V4.97H.96A9 9 0 0 0 0 9c0 1.45.35 2.83.96 4.03z"/><path fill="#EA4335" d="M9 3.58c1.32 0 2.51.45 3.44 1.35l2.58-2.58C13.46.89 11.43 0 9 0A9 9 0 0 0 .96 4.97L3.95 7.3C4.66 5.17 6.65 3.58 9 3.58z"/></svg>
-        เข้าสู่ระบบด้วย Google โรงเรียน
-      </button>
-      <div class="hint" style="margin-top:14px;">ใช้ได้เฉพาะอีเมล @nongki.ac.th เท่านั้น</div>
+    </div>
+    <div class="guide-steps">
+      <div class="guide-step">
+        <div class="guide-step-num">1</div>
+        <div class="guide-step-title"><i data-lucide="log-in" style="width:14px;height:14px;color:var(--accent)"></i>เข้าสู่ระบบ</div>
+        <div class="guide-step-desc">กดปุ่ม "เข้าสู่ระบบด้วย Google โรงเรียน" มุมขวาบน แล้วเลือกอีเมล @nongki.ac.th ของตัวเอง</div>
+      </div>
+      <div class="guide-step">
+        <div class="guide-step-num">2</div>
+        <div class="guide-step-title"><i data-lucide="user-plus" style="width:14px;height:14px;color:var(--accent)"></i>กรอกข้อมูลส่วนตัว</div>
+        <div class="guide-step-desc">ล็อกอินครั้งแรกให้กรอก ชื่อ-นามสกุล ระดับชั้น ห้อง และกลุ่มการเรียน (กรอกครั้งเดียว)</div>
+      </div>
+      <div class="guide-step">
+        <div class="guide-step-num">3</div>
+        <div class="guide-step-title"><i data-lucide="upload" style="width:14px;height:14px;color:var(--accent)"></i>ส่งกิจกรรม/เกียรติบัตร</div>
+        <div class="guide-step-desc">กดปุ่ม "ส่งกิจกรรมใหม่" แนบไฟล์เกียรติบัตรและกรอกรายละเอียดกิจกรรม</div>
+      </div>
+      <div class="guide-step">
+        <div class="guide-step-num">4</div>
+        <div class="guide-step-title"><i data-lucide="clipboard-check" style="width:14px;height:14px;color:var(--accent)"></i>รอครูตรวจสอบ</div>
+        <div class="guide-step-desc">ครูกลุ่มสาระตรวจก่อน แล้วครูแนะแนวยืนยันขั้นสุดท้าย ติดตามสถานะได้ที่หน้าประวัติ</div>
+      </div>
+      <div class="guide-step">
+        <div class="guide-step-num">5</div>
+        <div class="guide-step-title"><i data-lucide="folder-check" style="width:14px;height:14px;color:var(--accent)"></i>ดูแฟ้มผลงาน</div>
+        <div class="guide-step-desc">รายการที่ยืนยันครบแล้วจะไปแสดงในแฟ้มผลงานของคุณ พร้อมใช้ยื่น TCAS</div>
+      </div>
     </div>
   </div>
-</div>
+</section>
 
 <section class="showcase">
   <div class="showcase-panel">
