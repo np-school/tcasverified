@@ -59,7 +59,7 @@ async function loadPending() {
       const tr = document.createElement("tr");
       tr.innerHTML = `
         <td><div style="font-weight:700;">${escapeHtml(a.studentName)}</div><div style="color:var(--text3);font-size:12px;">${escapeHtml(a.studentLevel)} ${escapeHtml(a.studentRoom)}</div></td>
-        <td>${escapeHtml(a.title)}</td>
+        <td><div style="font-weight:700;">${escapeHtml(a.title)}</div>${recordDetailLine(a) ? `<div style="color:var(--text3);font-size:12px;margin-top:2px;">${escapeHtml(recordDetailLine(a))}</div>` : ""}</td>
         <td style="color:var(--text2);">${formatDate(a.createdAt)}</td>
         <td><a href="${a.certificateUrl}" target="_blank" style="color:var(--accent);font-weight:700;display:flex;align-items:center;gap:5px;"><i data-lucide="file-text" style="width:14px;height:14px"></i>ดูไฟล์</a></td>
         <td><div style="display:flex;gap:8px;">

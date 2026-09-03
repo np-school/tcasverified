@@ -32,7 +32,58 @@
 
     <form id="submitForm" class="form-section">
       <div class="form-grid">
-        <div class="field full"><label>ชื่อกิจกรรม <span class="req">*</span></label><input id="f_title" required placeholder="เช่น ค่ายอบรมผู้นำเยาวชนอาเซียน"></div>
+        <div class="field full">
+          <label>รูปแบบข้อมูล <span class="req">*</span></label>
+          <select id="f_recordtype" required>
+            <option value="">- เลือกรูปแบบ -</option>
+            <option value="activity">กิจกรรม</option>
+            <option value="project">โครงงาน</option>
+            <option value="award">รางวัล</option>
+            <option value="course">หลักสูตรอบรม</option>
+          </select>
+          <div class="hint" id="f_recordtype_hint">เลือกรูปแบบข้อมูลก่อน ระบบจะแสดงช่องกรอกที่ตรงกับประเภทนั้นให้อัตโนมัติ</div>
+        </div>
+
+        <div class="field full" id="f_title_wrap"><label id="f_title_label">ชื่อรายการ <span class="req">*</span></label><input id="f_title" required placeholder="เช่น ค่ายอบรมผู้นำเยาวชนอาเซียน"></div>
+
+        <!-- เฉพาะ "กิจกรรม" -->
+        <div class="field full rt-group" data-rt="activity" style="display:none;">
+          <label>บทบาท / ผลที่ได้รับ <span class="req">*</span></label>
+          <input id="f_role" placeholder="เช่น ผู้เข้าร่วม, ประธานทีม, ผ่านการอบรม">
+        </div>
+
+        <!-- เฉพาะ "โครงงาน" -->
+        <div class="field rt-group" data-rt="project" style="display:none;">
+          <label>ประเภท/สาขาโครงงาน <span class="req">*</span></label>
+          <select id="f_projecttype">
+            <option value="">- เลือกสาขา -</option>
+            <option value="วิทยาศาสตร์">วิทยาศาสตร์</option>
+            <option value="คอมพิวเตอร์">คอมพิวเตอร์</option>
+            <option value="สังคมศาสตร์">สังคมศาสตร์</option>
+            <option value="อื่นๆ">อื่นๆ</option>
+          </select>
+        </div>
+
+        <!-- เฉพาะ "รางวัล" -->
+        <div class="field rt-group" data-rt="award" style="display:none;">
+          <label>ชื่อรางวัลที่ได้รับ <span class="req">*</span></label>
+          <input id="f_prizename" placeholder="เช่น เหรียญทอง, รางวัลชนะเลิศ, ชมเชย">
+        </div>
+
+        <!-- เฉพาะ "หลักสูตรอบรม" -->
+        <div class="field rt-group" data-rt="course" style="display:none;">
+          <label>หมวดหมู่หลักสูตร</label>
+          <input id="f_coursecategory" placeholder="เช่น คอร์สออนไลน์ (MOOC)">
+        </div>
+        <div class="field rt-group" data-rt="course" style="display:none;">
+          <label>คะแนน/ผลสอบ (ถ้ามี)</label>
+          <input id="f_score" placeholder="เช่น 85/100">
+        </div>
+        <div class="field rt-group" data-rt="course" style="display:none;">
+          <label>วันหมดอายุใบรับรอง (ถ้ามี)</label>
+          <input id="f_expired" type="date">
+        </div>
+
         <div class="field"><label>หมวดหมู่กิจกรรม (TCAS Certified) <span class="req">*</span></label>
           <select id="f_type" required><option value="">- เลือกหมวดหมู่ -</option></select>
           <div class="hint" id="f_type_hint">เลือกหมวดหมู่ตามเกณฑ์ TCAS Certified (T-C-A-S)</div>
@@ -41,8 +92,20 @@
           <select id="f_department" required><option value="">- เลือกกลุ่มสาระ -</option></select>
           <div class="hint">ใช้ส่งให้ครูประจำกลุ่มสาระนี้เป็นผู้ตรวจสอบ</div>
         </div>
-        <div class="field"><label>วันที่จัดกิจกรรม <span class="req">*</span></label><input id="f_date" type="date" required></div>
+        <div class="field"><label>ระดับ <span class="req">*</span></label>
+          <select id="f_level" required>
+            <option value="">- เลือกระดับ -</option>
+            <option value="school">ระดับโรงเรียน</option>
+            <option value="regional">ระดับภูมิภาค/จังหวัด</option>
+            <option value="national">ระดับประเทศ</option>
+            <option value="international">ระดับนานาชาติ</option>
+          </select>
+        </div>
+        <div class="field"><label>จำนวนชั่วโมง (ถ้ามี)</label><input id="f_hours" type="number" min="0" placeholder="เช่น 12"></div>
+        <div class="field"><label>วันที่เริ่มกิจกรรม <span class="req">*</span></label><input id="f_date" type="date" required></div>
+        <div class="field"><label>วันที่สิ้นสุด (ถ้ามีมากกว่า 1 วัน)</label><input id="f_enddate" type="date"></div>
         <div class="field"><label>ปีการศึกษา <span class="req">*</span></label><select id="f_year" required></select></div>
+        <div class="field full"><label>รายละเอียดเพิ่มเติม (ถ้ามี)</label><textarea id="f_desc" rows="3" placeholder="อธิบายเพิ่มเติมเกี่ยวกับกิจกรรม/โครงงาน/รางวัล/หลักสูตร"></textarea></div>
         <div class="field full">
           <label>ไฟล์เกียรติบัตร / หลักฐาน <span class="req">*</span></label>
           <label class="upload-box" id="uploadBox" for="f_file">

@@ -14,6 +14,15 @@ const ACTIVITY_TYPE_SCOPE = {
 };
 const DEFAULT_DEPARTMENTS = ["วิทยาศาสตร์", "เทคโนโลยี", "คณิตศาสตร์", "ภาษาไทย", "สังคมศึกษาฯ", "สุขศึกษาฯ", "ภาษาต่างประเทศ", "ศิลปะ", "การงานอาชีพ", "แนะแนว"];
 
+/* ── รูปแบบข้อมูล (ตามโครงสร้างไฟล์นำเข้าเดิม: กิจกรรม/โครงงาน/รางวัล/หลักสูตรอบรม) ── */
+const RECORD_TYPE_META = {
+  activity: { label: "ชื่อกิจกรรม", placeholder: "เช่น ค่ายอบรมผู้นำเยาวชนอาเซียน", requiredExtra: ["f_role"] },
+  project:  { label: "ชื่อโครงงาน", placeholder: "เช่น ระบบรดน้ำต้นไม้อัตโนมัติด้วย IoT", requiredExtra: ["f_projecttype"] },
+  award:    { label: "ชื่อการแข่งขัน/รายการที่ได้รับรางวัล", placeholder: "เช่น การแข่งขันชีววิทยาโอลิมปิกระดับชาติ ครั้งที่ 22", requiredExtra: ["f_prizename"] },
+  course:   { label: "ชื่อหลักสูตร", placeholder: "เช่น อบรม Unity Game Development", requiredExtra: [] },
+};
+const ALL_EXTRA_FIELD_IDS = ["f_role", "f_projecttype", "f_prizename", "f_coursecategory", "f_score", "f_expired"];
+
 let currentCtx = null;
 let selectedFile = null;
 
@@ -39,6 +48,34 @@ guardPage(["student", "admin"], async (ctx) => {
   document.getElementById("f_date").valueAsDate = new Date();
   updateTypeScopeHint();
 });
+
+document.getElementById("f_recordtype").addEventListener("change", updateRecordTypeFields);
+
+function updateRecordTypeFields() {
+  const rt = document.getElementById("f_recordtype").value;
+  const meta = RECORD_TYPE_META[rt];
+
+  // สลับการแสดงผลกลุ่มฟิลด์เฉพาะประเภท + ปรับ required ให้ตรงเฉพาะกลุ่มที่กำลังโชว์
+  document.querySelectorAll(".rt-group").forEach((el) => {
+    const show = meta && el.dataset.rt === rt;
+    el.style.display = show ? "" : "none";
+  });
+  ALL_EXTRA_FIELD_IDS.forEach((id) => {
+    const el = document.getElementById(id);
+    if (el) el.required = false;
+  });
+  if (meta) {
+    meta.requiredExtra.forEach((id) => {
+      const el = document.getElementById(id);
+      if (el) el.required = true;
+    });
+    document.getElementById("f_title_label").innerHTML = meta.label + ' <span class="req">*</span>';
+    document.getElementById("f_title").placeholder = meta.placeholder;
+  } else {
+    document.getElementById("f_title_label").innerHTML = 'ชื่อรายการ <span class="req">*</span>';
+    document.getElementById("f_title").placeholder = "เลือกรูปแบบข้อมูลก่อน";
+  }
+}
 
 document.getElementById("f_type").addEventListener("change", updateTypeScopeHint);
 
@@ -102,6 +139,11 @@ document.getElementById("f_file").addEventListener("change", (e) => {
 
 document.getElementById("submitForm").addEventListener("submit", async (e) => {
   e.preventDefault();
+  const recordType = document.getElementById("f_recordtype").value;
+  if (!recordType) {
+    showToast("กรุณาเลือกรูปแบบข้อมูล", "error");
+    return;
+  }
   if (!selectedFile) {
     showToast("กรุณาแนบไฟล์เกียรติบัตร", "error");
     return;
@@ -118,8 +160,26 @@ document.getElementById("submitForm").addEventListener("submit", async (e) => {
     const title = document.getElementById("f_title").value.trim();
     const type = document.getElementById("f_type").value;
     const department = document.getElementById("f_department").value;
+    const level = document.getElementById("f_level").value;
+    const hours = document.getElementById("f_hours").value;
     const eventDate = document.getElementById("f_date").value;
+    const endDate = document.getElementById("f_enddate").value || null;
     const year = document.getElementById("f_year").value;
+    const description = document.getElementById("f_desc").value.trim() || null;
+
+    // ฟิลด์เฉพาะตาม "รูปแบบข้อมูล" — ตรงกับโครงสร้างไฟล์นำเข้าเดิม (กิจกรรม/โครงงาน/รางวัล/หลักสูตรอบรม)
+    const typeDetails = {};
+    if (recordType === "activity") {
+      typeDetails.expName = document.getElementById("f_role").value.trim();
+    } else if (recordType === "project") {
+      typeDetails.projectType = document.getElementById("f_projecttype").value;
+    } else if (recordType === "award") {
+      typeDetails.prizeName = document.getElementById("f_prizename").value.trim();
+    } else if (recordType === "course") {
+      typeDetails.category = document.getElementById("f_coursecategory").value.trim() || null;
+      typeDetails.score = document.getElementById("f_score").value.trim() || null;
+      typeDetails.expiredDate = document.getElementById("f_expired").value || null;
+    }
 
     const fileBase64 = await fileToBase64(selectedFile);
     const idToken = await currentCtx.user.getIdToken();
@@ -132,7 +192,7 @@ document.getElementById("submitForm").addEventListener("submit", async (e) => {
         mimeType: selectedFile.type || "application/octet-stream",
         fileBase64,
         year,
-        category: type, // "หมวดหมู่" ในชื่อไฟล์ = ประเภทกิจกรรม
+        category: type, // "หมวดหมู่" ในชื่อไฟล์ = หมวด T-C-A-S
         eventDate,
         activityName: title,
       }),
@@ -146,11 +206,17 @@ document.getElementById("submitForm").addEventListener("submit", async (e) => {
       studentLevel: profile.level,
       studentRoom: profile.room,
       studentTrack: profile.track,
+      recordType,
       title,
       type,
       department,
+      level,
+      hours: hours ? Number(hours) : null,
+      description,
       eventDate,
+      endDate,
       year: Number(year),
+      typeDetails,
       certificateUrl: uploadData.url,
       certificateFileId: uploadData.fileId,
       certificateFileName: selectedFile.name,

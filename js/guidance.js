@@ -52,6 +52,7 @@ async function loadPending() {
           <div>
             <div style="font-weight:700;font-size:14.5px;">${escapeHtml(a.title)}</div>
             <div style="color:var(--text2);font-size:12.5px;margin-top:3px;">นักเรียน: ${escapeHtml(a.studentName)} · ${escapeHtml(a.studentLevel)} ${escapeHtml(a.studentRoom)} · ประเภท: ${escapeHtml(a.type)}</div>
+            ${recordDetailLine(a) ? `<div style="color:var(--text3);font-size:12px;margin-top:2px;">${escapeHtml(recordDetailLine(a))}</div>` : ""}
             <div style="color:var(--text2);font-size:12.5px;margin-top:2px;">ยืนยันโดยครูกลุ่มสาระ${escapeHtml(a.department || "")} · ${escapeHtml(a.deptReviewerEmail || "")} · ${formatDate(a.deptReviewedAt)}</div>
           </div>
           <div style="display:flex;flex-direction:column;gap:8px;align-items:flex-end;">

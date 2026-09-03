@@ -25,3 +25,24 @@ function statusTrackHtml(status) {
   };
   return `<div class="track" style="width:200px;"><div class="${segClass(0)}"></div><div class="${segClass(1)}"></div><div class="${segClass(2)}"></div></div>`;
 }
+
+/* ── รูปแบบข้อมูล (กิจกรรม/โครงงาน/รางวัล/หลักสูตรอบรม) ── */
+const RECORD_TYPE_LABEL = { activity: "กิจกรรม", project: "โครงงาน", award: "รางวัล", course: "หลักสูตรอบรม" };
+
+/** สร้างบรรทัดสรุปฟิลด์เฉพาะของแต่ละรูปแบบข้อมูล (a = doc จาก collection "activities") ให้ครูกลุ่มสาระ/แนะแนวเห็นครบ ไม่ใช่แค่ชื่อรายการ */
+function recordDetailLine(a) {
+  const d = a.typeDetails || {};
+  const parts = [];
+  if (a.recordType && RECORD_TYPE_LABEL[a.recordType]) parts.push(RECORD_TYPE_LABEL[a.recordType]);
+  if (a.recordType === "activity" && d.expName) parts.push("บทบาท/ผลที่ได้รับ: " + d.expName);
+  if (a.recordType === "project" && d.projectType) parts.push("สาขา: " + d.projectType);
+  if (a.recordType === "award" && d.prizeName) parts.push("รางวัล: " + d.prizeName);
+  if (a.recordType === "course") {
+    if (d.category) parts.push("หมวดหมู่: " + d.category);
+    if (d.score) parts.push("คะแนน: " + d.score);
+    if (d.expiredDate) parts.push("หมดอายุ: " + d.expiredDate);
+  }
+  if (a.level) parts.push("ระดับ: " + a.level);
+  if (a.hours) parts.push(a.hours + " ชม.");
+  return parts.join(" · ");
+}

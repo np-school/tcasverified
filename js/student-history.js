@@ -74,6 +74,7 @@ function render() {
         <div>
           <div style="font-weight:700;font-size:14.5px;">${escapeHtml(a.title)}</div>
           <div style="color:var(--text2);font-size:12.5px;margin-top:2px;">ประเภท: ${escapeHtml(a.type)} · ยื่นเมื่อ ${formatDate(a.createdAt)}</div>
+          ${recordDetailLine(a) ? `<div style="color:var(--text3);font-size:12px;margin-top:2px;">${escapeHtml(recordDetailLine(a))}</div>` : ""}
           ${statusTrackHtml(a.status)}
           ${a.status === "revision" && a.revisionReason ? `<div style="font-size:12px;color:var(--c-red-deep);margin-top:6px;">เหตุผลตีกลับ: ${escapeHtml(a.revisionReason)}</div>` : ""}
         </div>
