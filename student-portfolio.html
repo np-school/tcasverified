@@ -1,0 +1,105 @@
+<!doctype html>
+<html lang="th">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>แฟ้มผลงาน – NP-TCAS Verified</title>
+<link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<link href="shared/styles.css" rel="stylesheet">
+<script src="https://unpkg.com/lucide@1.24.0"></script>
+<style>
+  .profile-card{display:flex;align-items:center;gap:16px;background:linear-gradient(135deg,var(--accent),var(--accent-dark));border-radius:18px;padding:20px 22px;color:#fff;margin-bottom:22px;flex-wrap:wrap;}
+  .profile-avatar{width:64px;height:64px;border-radius:50%;border:2.5px solid rgba(255,255,255,.55);object-fit:cover;background:rgba(255,255,255,.18);flex-shrink:0;}
+  .profile-name{font-size:18px;font-weight:800;}
+  .profile-meta{font-size:12.5px;color:rgba(255,255,255,.85);margin-top:3px;display:flex;flex-wrap:wrap;gap:4px 10px;}
+  .profile-stats{margin-left:auto;display:flex;gap:22px;}
+  .profile-stat{text-align:center;}
+  .profile-stat b{display:block;font-size:20px;font-weight:800;}
+  .profile-stat span{font-size:11px;color:rgba(255,255,255,.8);}
+
+  .filters-row{display:flex;gap:10px;margin-bottom:22px;flex-wrap:wrap;}
+
+  .year-group{margin-bottom:30px;}
+  .year-group-head{display:flex;align-items:center;gap:10px;margin-bottom:14px;}
+  .year-group-title{font-size:16px;font-weight:800;color:var(--c-ink);}
+  .year-group-count{font-size:11.5px;font-weight:700;color:var(--text2);background:var(--bg-alt);padding:3px 10px;border-radius:100px;}
+
+  .dept-block{margin-bottom:20px;}
+  .dept-block-head{display:flex;align-items:center;gap:8px;margin-bottom:10px;padding-left:2px;}
+  .dept-block-title{font-size:13.5px;font-weight:700;color:var(--accent);}
+  .dept-block-line{flex:1;height:1px;background:var(--border);}
+
+  .cert-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(230px,1fr));gap:14px;}
+  .cert-card{background:#fff;border:1px solid var(--border);border-radius:16px;overflow:hidden;box-shadow:0 2px 8px rgba(0,0,0,.04);display:flex;flex-direction:column;transition:box-shadow .15s,transform .15s;}
+  .cert-card:hover{box-shadow:0 8px 20px rgba(0,0,0,.09);transform:translateY(-2px);}
+  .cert-thumb-wrap{position:relative;aspect-ratio:4/3;background:var(--bg-alt);display:flex;align-items:center;justify-content:center;overflow:hidden;}
+  .cert-thumb-wrap img{width:100%;height:100%;object-fit:cover;display:block;}
+  .cert-thumb-fallback{display:flex;flex-direction:column;align-items:center;gap:6px;color:var(--text3);font-size:11px;}
+  .cert-thumb-badge{position:absolute;top:8px;left:8px;}
+  .cert-body{padding:12px 14px 14px;display:flex;flex-direction:column;gap:6px;flex:1;}
+  .cert-type{font-size:10.5px;font-weight:800;color:var(--accent);letter-spacing:.2px;}
+  .cert-title{font-size:13.5px;font-weight:700;line-height:1.35;color:var(--text);}
+  .cert-detail{font-size:11.5px;color:var(--text2);line-height:1.5;}
+  .cert-footer{margin-top:auto;display:flex;align-items:center;justify-content:space-between;gap:8px;padding-top:8px;border-top:1px solid var(--border-soft);}
+  .cert-date{font-size:11px;color:var(--text3);}
+  .cert-link{font-size:11.5px;color:var(--accent);font-weight:700;display:flex;align-items:center;gap:4px;text-decoration:none;flex-shrink:0;}
+
+  @media (max-width:640px){
+    .profile-card{padding:16px;}
+    .profile-stats{margin-left:0;width:100%;justify-content:space-around;padding-top:12px;border-top:1px solid rgba(255,255,255,.25);}
+    .cert-grid{grid-template-columns:repeat(auto-fill,minmax(150px,1fr));}
+  }
+</style>
+</head>
+<body>
+
+<div id="loadingOverlay"><div class="spinner"></div><p style="color:var(--text2);font-size:14px;font-weight:700;">กำลังตรวจสอบสิทธิ์...</p></div>
+<div id="toast"></div>
+
+<div class="navbar blue"><div class="navbar-inner">
+  <div class="navbar-brand">
+    <div class="navbar-mark"><i data-lucide="badge-check" style="width:20px;height:20px"></i></div>
+    <div><div class="navbar-title">NP-TCAS Verified</div><div class="navbar-subtitle">โรงเรียนหนองกี่พิทยาคม</div></div>
+  </div>
+  <div class="navbar-user"><span id="userLabel"></span><button class="navbar-logout" onclick="signOutUser()" title="ออกจากระบบ"><i data-lucide="log-out" style="width:16px;height:16px"></i></button></div>
+</div></div>
+
+<div class="shell">
+  <div class="sidebar">
+    <a class="sidebar-btn" href="student-history.html"><i data-lucide="history" style="width:18px;height:18px"></i>ประวัติการส่ง</a>
+    <a class="sidebar-btn" href="student-submit.html"><i data-lucide="plus-circle" style="width:18px;height:18px"></i>ส่งกิจกรรมใหม่</a>
+    <a class="sidebar-btn active" href="student-portfolio.html"><i data-lucide="award" style="width:18px;height:18px"></i>แฟ้มผลงาน</a>
+    <a class="sidebar-btn" href="onboarding.html"><i data-lucide="user-circle" style="width:18px;height:18px"></i>ข้อมูลส่วนตัว</a>
+  </div>
+  <div class="content">
+    <div class="page-header">
+      <div class="page-title">แฟ้มผลงาน</div>
+      <div class="page-sub">รวมเกียรติบัตรและการอบรมที่ได้รับการรับรองจากครูกลุ่มสาระแล้ว แยกตามปีการศึกษาและกลุ่มสาระ</div>
+    </div>
+
+    <div class="profile-card" id="profileCard"></div>
+
+    <div class="filters-row">
+      <select id="yearFilter"><option value="">ทุกปีการศึกษา</option></select>
+      <select id="deptFilter"><option value="">ทุกกลุ่มสาระ</option></select>
+    </div>
+
+    <div id="groups"></div>
+
+    <div id="emptyState" class="empty-state" style="display:none;">
+      <i data-lucide="award" style="width:36px;height:36px;margin-bottom:10px;"></i>
+      <div>ยังไม่มีรายการที่ได้รับการรับรองจากครูกลุ่มสาระ</div>
+      <div style="font-size:12px;margin-top:4px;">เมื่อครูกลุ่มสาระยืนยันกิจกรรมของคุณแล้ว รายการจะปรากฏที่นี่โดยอัตโนมัติ</div>
+    </div>
+  </div>
+</div>
+
+<script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore-compat.js"></script>
+<script src="shared/firebase-init.js"></script>
+<script src="shared/auth-guard.js"></script>
+<script src="shared/status-meta.js"></script>
+<script src="js/student-portfolio.js"></script>
+</body>
+</html>
