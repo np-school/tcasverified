@@ -1,7 +1,18 @@
 lucide.createIcons();
 
-const DEFAULT_ACTIVITY_TYPES = ["อบรม/ค่าย", "การแข่งขัน", "จิตอาสา", "อื่นๆ"];
-const DEFAULT_DEPARTMENTS = ["วิทยาศาสตร์", "คณิตศาสตร์", "สังคมศึกษา", "ภาษาไทย", "ภาษาต่างประเทศ", "สุขศึกษาและพลศึกษา", "ศิลปะ", "การงานอาชีพ"];
+const DEFAULT_ACTIVITY_TYPES = [
+  "T - Talent & Creativity",
+  "C - Contribution to Society",
+  "A - Academic Excellence",
+  "S - Self-Development",
+];
+const ACTIVITY_TYPE_SCOPE = {
+  "T - Talent & Creativity": "ความสามารถพิเศษและศิลปวัฒนธรรม เช่น ประกวดดนตรี, กีฬาเยาวชน, งานแสดงศิลปะ, E-Sports",
+  "C - Contribution to Society": "จิตอาสาและภาวะผู้นำ เช่น ประธานนักเรียน, อาสาสมัครกู้ภัย, กิจกรรมปลูกป่า (ที่มีการเช็กอินจริง)",
+  "A - Academic Excellence": "วิชาการและทักษะเฉพาะทาง เช่น สอวน., สอบวัดระดับภาษา, แข่งหุ่นยนต์, โครงงานวิทยาศาสตร์",
+  "S - Self-Development": "การพัฒนาตนเอง เช่น คอร์สเรียนออนไลน์ (MOOC), การเข้าค่าย Pre-college ของคณะต่างๆ",
+};
+const DEFAULT_DEPARTMENTS = ["วิทยาศาสตร์", "เทคโนโลยี", "คณิตศาสตร์", "ภาษาไทย", "สังคมศึกษาฯ", "สุขศึกษาฯ", "ภาษาต่างประเทศ", "ศิลปะ", "การงานอาชีพ", "แนะแนว"];
 
 let currentCtx = null;
 let selectedFile = null;
@@ -26,7 +37,17 @@ guardPage(["student", "admin"], async (ctx) => {
   await loadOptions();
   buildYearOptions();
   document.getElementById("f_date").valueAsDate = new Date();
+  updateTypeScopeHint();
 });
+
+document.getElementById("f_type").addEventListener("change", updateTypeScopeHint);
+
+function updateTypeScopeHint() {
+  const hintEl = document.getElementById("f_type_hint");
+  if (!hintEl) return;
+  const val = document.getElementById("f_type").value;
+  hintEl.textContent = ACTIVITY_TYPE_SCOPE[val] || "เลือกหมวดหมู่ตามเกณฑ์ TCAS Certified (T-C-A-S)";
+}
 
 async function loadOptions() {
   try {

@@ -33,7 +33,10 @@
     <form id="submitForm" class="form-section">
       <div class="form-grid">
         <div class="field full"><label>ชื่อกิจกรรม <span class="req">*</span></label><input id="f_title" required placeholder="เช่น ค่ายอบรมผู้นำเยาวชนอาเซียน"></div>
-        <div class="field"><label>ประเภทกิจกรรม <span class="req">*</span></label><select id="f_type" required><option value="">- เลือกประเภท -</option></select></div>
+        <div class="field"><label>หมวดหมู่กิจกรรม (TCAS Certified) <span class="req">*</span></label>
+          <select id="f_type" required><option value="">- เลือกหมวดหมู่ -</option></select>
+          <div class="hint" id="f_type_hint">เลือกหมวดหมู่ตามเกณฑ์ TCAS Certified (T-C-A-S)</div>
+        </div>
         <div class="field"><label>กลุ่มสาระที่เกี่ยวข้อง <span class="req">*</span></label>
           <select id="f_department" required><option value="">- เลือกกลุ่มสาระ -</option></select>
           <div class="hint">ใช้ส่งให้ครูประจำกลุ่มสาระนี้เป็นผู้ตรวจสอบ</div>
