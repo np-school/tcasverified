@@ -67,6 +67,7 @@ function render() {
   empty.style.display = filtered.length ? "none" : "block";
 
   filtered.forEach((a) => {
+    const canDelete = a.status === "submitted" || a.status === "revision";
     const card = document.createElement("div");
     card.className = "card";
     card.innerHTML = `
@@ -81,11 +82,43 @@ function render() {
         <div style="display:flex;flex-direction:column;align-items:flex-end;gap:8px;">
           ${statusBadgeHtml(a.status)}
           ${a.certificateUrl ? `<a href="${a.certificateUrl}" target="_blank" style="font-size:12px;color:var(--accent);font-weight:700;display:flex;align-items:center;gap:4px;"><i data-lucide="file-text" style="width:13px;height:13px"></i>ดูเกียรติบัตร</a>` : ""}
+          ${canDelete ? `<button class="icon-btn" title="ลบรายการนี้" onclick="confirmDeleteActivity('${a.id}','${escapeHtml(a.title).replace(/'/g, "&#39;")}')"><i data-lucide="trash-2" style="width:15px;height:15px"></i></button>` : ""}
         </div>
       </div>`;
     list.appendChild(card);
   });
   lucide.createIcons();
+}
+
+let pendingDeleteId = null;
+
+function confirmDeleteActivity(id, title) {
+  pendingDeleteId = id;
+  document.getElementById("deleteModalTitle").textContent = title;
+  document.getElementById("deleteModalOverlay").classList.add("open");
+}
+
+function closeDeleteModal() {
+  pendingDeleteId = null;
+  document.getElementById("deleteModalOverlay").classList.remove("open");
+}
+
+async function doDeleteActivity() {
+  if (!pendingDeleteId) return;
+  const btn = document.getElementById("confirmDeleteBtn");
+  btn.disabled = true;
+  try {
+    await db.collection("activities").doc(pendingDeleteId).delete();
+    allActivities = allActivities.filter((a) => a.id !== pendingDeleteId);
+    closeDeleteModal();
+    render();
+    showToast("ลบรายการแล้ว", "success");
+  } catch (err) {
+    console.error(err);
+    showToast("ลบไม่สำเร็จ ลองใหม่อีกครั้ง", "error");
+  } finally {
+    btn.disabled = false;
+  }
 }
 
 function escapeHtml(str) {

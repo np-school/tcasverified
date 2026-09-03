@@ -111,6 +111,30 @@ async function loadAll() {
   }
 }
 
+/* ── Export: แยกเป็น 4 ไฟล์ตามรูปแบบข้อมูล (schema ใกล้เคียงไฟล์นำเข้าเดิม: กิจกรรม/โครงงาน/รางวัล/หลักสูตรอบรม) ── */
+const EXPORT_SCHEMA = {
+  activity: {
+    fileSuffix: "กิจกรรม",
+    header: ["เลขบัตรประชาชน", "ชื่อ-สกุล", "ชั้น", "ห้อง", "ชื่อกิจกรรม", "บทบาท/ผลที่ได้รับ", "รายละเอียด", "วันที่เริ่ม", "วันที่สิ้นสุด", "ปีการศึกษา", "ระดับ", "ชั่วโมง", "หมวดหมู่ TCAS", "กลุ่มสาระ"],
+    row: (a) => [a.nationalId || "", a.studentName, a.studentLevel, a.studentRoom, a.title, (a.typeDetails && a.typeDetails.expName) || "", a.description || "", a.eventDate, a.endDate || "", a.year, a.level || "", a.hours ?? "", a.type, a.department],
+  },
+  project: {
+    fileSuffix: "โครงงาน",
+    header: ["เลขบัตรประชาชน", "ชื่อ-สกุล", "ชั้น", "ห้อง", "ชื่อโครงงาน", "ประเภทโครงงาน", "รายละเอียด", "วันที่เริ่ม", "วันที่สิ้นสุด", "ปีการศึกษา", "ระดับ", "ชั่วโมง", "หมวดหมู่ TCAS", "กลุ่มสาระ"],
+    row: (a) => [a.nationalId || "", a.studentName, a.studentLevel, a.studentRoom, a.title, (a.typeDetails && a.typeDetails.projectType) || "", a.description || "", a.eventDate, a.endDate || "", a.year, a.level || "", a.hours ?? "", a.type, a.department],
+  },
+  award: {
+    fileSuffix: "รางวัล",
+    header: ["เลขบัตรประชาชน", "ชื่อ-สกุล", "ชั้น", "ห้อง", "ชื่อการแข่งขัน/รายการ", "ชื่อรางวัลที่ได้รับ", "รายละเอียด", "วันที่", "วันที่สิ้นสุด", "ปีการศึกษา", "ระดับ", "ชั่วโมง", "หมวดหมู่ TCAS", "กลุ่มสาระ"],
+    row: (a) => [a.nationalId || "", a.studentName, a.studentLevel, a.studentRoom, a.title, (a.typeDetails && a.typeDetails.prizeName) || "", a.description || "", a.eventDate, a.endDate || "", a.year, a.level || "", a.hours ?? "", a.type, a.department],
+  },
+  course: {
+    fileSuffix: "หลักสูตรอบรม",
+    header: ["เลขบัตรประชาชน", "ชื่อ-สกุล", "ชั้น", "ห้อง", "ชื่อหลักสูตร", "หมวดหมู่หลักสูตร", "คะแนน/ผลสอบ", "รายละเอียด", "วันที่ออกใบรับรอง", "วันหมดอายุ", "ปีการศึกษา", "ระดับ", "ชั่วโมง", "หมวดหมู่ TCAS", "กลุ่มสาระ"],
+    row: (a) => [a.nationalId || "", a.studentName, a.studentLevel, a.studentRoom, a.title, (a.typeDetails && a.typeDetails.category) || "", (a.typeDetails && a.typeDetails.score) || "", a.description || "", a.eventDate, (a.typeDetails && a.typeDetails.expiredDate) || "", a.year, a.level || "", a.hours ?? "", a.type, a.department],
+  },
+};
+
 document.getElementById("exportBtn").addEventListener("click", async () => {
   const year = document.getElementById("exportYearFilter").value;
   const btn = document.getElementById("exportBtn");
@@ -127,21 +151,33 @@ document.getElementById("exportBtn").addEventListener("click", async () => {
       return;
     }
 
-    const header = ["ชื่อ-สกุล", "ชั้น", "ห้อง", "ชื่อกิจกรรม", "ประเภท", "กลุ่มสาระ", "วันที่จัดกิจกรรม", "ผู้ยืนยันครูกลุ่มสาระ", "ผู้ยืนยันครูแนะแนว"];
-    const rows = [header];
+    // แยกเอกสารตาม recordType — ของเก่าที่ไม่มี recordType (ส่งก่อนอัปเดตฟอร์ม) จะรวมอยู่ในกลุ่ม "อื่นๆ" ด้านล่าง
+    const grouped = { activity: [], project: [], award: [], course: [] };
+    const legacy = [];
     snap.forEach((doc) => {
       const a = doc.data();
-      rows.push([a.studentName, a.studentLevel, a.studentRoom, a.title, a.type, a.department, a.eventDate, a.deptReviewerEmail, a.guidanceReviewerEmail]);
+      if (grouped[a.recordType]) grouped[a.recordType].push(a);
+      else legacy.push(a);
     });
 
-    const csv = "\uFEFF" + rows.map((r) => r.map(csvEscape).join(",")).join("\r\n");
-    const blob = new Blob([csv], { type: "text/csv;charset=utf-8;" });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement("a");
-    a.href = url;
-    a.download = `np-tcas-verified-${year}.csv`;
-    a.click();
-    URL.revokeObjectURL(url);
+    let fileCount = 0;
+    Object.keys(EXPORT_SCHEMA).forEach((rt) => {
+      const list = grouped[rt];
+      if (!list.length) return;
+      const schema = EXPORT_SCHEMA[rt];
+      downloadCsv(`np-tcas-verified-${schema.fileSuffix}-${year}.csv`, [schema.header, ...list.map(schema.row)]);
+      fileCount++;
+    });
+
+    // ข้อมูลเก่าที่ยังไม่มี recordType — ส่งออกเป็นไฟล์รวมแยกต่างหาก กันข้อมูลตกหล่น
+    if (legacy.length) {
+      const header = ["ชื่อ-สกุล", "ชั้น", "ห้อง", "ชื่อกิจกรรม", "ประเภท", "กลุ่มสาระ", "วันที่จัดกิจกรรม", "ผู้ยืนยันครูกลุ่มสาระ", "ผู้ยืนยันครูแนะแนว"];
+      const rows = [header, ...legacy.map((a) => [a.studentName, a.studentLevel, a.studentRoom, a.title, a.type, a.department, a.eventDate, a.deptReviewerEmail, a.guidanceReviewerEmail])];
+      downloadCsv(`np-tcas-verified-อื่นๆ-ก่อนอัปเดตฟอร์ม-${year}.csv`, rows);
+      fileCount++;
+    }
+
+    showToast(`ส่งออกสำเร็จ ${fileCount} ไฟล์`, "success");
   } catch (err) {
     console.error(err);
     showToast("ส่งออกไม่สำเร็จ", "error");
@@ -149,6 +185,19 @@ document.getElementById("exportBtn").addEventListener("click", async () => {
     btn.disabled = false;
   }
 });
+
+function downloadCsv(filename, rows) {
+  const csv = "\uFEFF" + rows.map((r) => r.map(csvEscape).join(",")).join("\r\n");
+  const blob = new Blob([csv], { type: "text/csv;charset=utf-8;" });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = filename;
+  document.body.appendChild(a);
+  a.click();
+  a.remove();
+  URL.revokeObjectURL(url);
+}
 
 function csvEscape(val) {
   const s = String(val ?? "");

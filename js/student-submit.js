@@ -202,6 +202,8 @@ document.getElementById("submitForm").addEventListener("submit", async (e) => {
 
     await activityRef.set({
       studentUid: currentCtx.user.uid,
+      studentId: profile.studentId || null,
+      nationalId: profile.nationalId || null,
       studentName: `${profile.prefix}${profile.firstName} ${profile.lastName}`,
       studentLevel: profile.level,
       studentRoom: profile.room,

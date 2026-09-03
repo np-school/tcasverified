@@ -47,7 +47,11 @@ service cloud.firestore {
       allow update: if isDeptTeacher() || isGuidance() || isAdmin()
         || (resource.data.studentUid == request.auth.uid && resource.data.status == 'revision');
 
-      allow delete: if isAdmin();
+      // แอดมินลบได้เสมอ / นักเรียนลบของตัวเองได้เฉพาะตอนยังไม่มีครูตรวจ (submitted หรือ revision)
+      // กันไม่ให้ลบรายการที่ครูกลุ่มสาระ/แนะแนวยืนยันแล้ว เพื่อรักษาความถูกต้องของประวัติ
+      allow delete: if isAdmin()
+        || (resource.data.studentUid == request.auth.uid
+            && (resource.data.status == 'submitted' || resource.data.status == 'revision'));
     }
 
     // settings/{doc} — activityTypes, departments, academic (ระดับชั้น/ห้อง/กลุ่มการเรียน)

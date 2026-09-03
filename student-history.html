@@ -52,6 +52,17 @@
   </div>
 </div>
 
+<div class="modal-overlay" id="deleteModalOverlay">
+  <div class="modal-box">
+    <h3>ยืนยันลบรายการ?</h3>
+    <p style="font-size:13.5px;color:var(--text2);">ต้องการลบ "<strong id="deleteModalTitle"></strong>" ใช่หรือไม่ การลบนี้ไม่สามารถกู้คืนได้ และไฟล์เกียรติบัตรที่แนบไว้จะยังอยู่ใน Google Drive กลาง (ต้องให้แอดมินลบแยกต่างหากถ้าต้องการ)</p>
+    <div class="modal-actions">
+      <button class="btn-secondary" onclick="closeDeleteModal()">ยกเลิก</button>
+      <button class="btn-reject" id="confirmDeleteBtn" onclick="doDeleteActivity()"><i data-lucide="trash-2" style="width:14px;height:14px"></i>ลบรายการ</button>
+    </div>
+  </div>
+</div>
+
 <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-auth-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore-compat.js"></script>
