@@ -7,12 +7,12 @@
    ═══════════════════════════════════════════════════════════════ */
 
 const firebaseConfig = {
-  apiKey: "YOUR_API_KEY",
-  authDomain: "YOUR_PROJECT.firebaseapp.com",
-  projectId: "YOUR_PROJECT_ID",
-  storageBucket: "YOUR_PROJECT.appspot.com",
-  messagingSenderId: "YOUR_SENDER_ID",
-  appId: "YOUR_APP_ID"
+  apiKey: "AIzaSyCUb3sghtw67uETaW_bokj7wVYi1vUj2hk",
+  authDomain: "np-tcasverified.firebaseapp.com",
+  projectId: "np-tcasverified",
+  storageBucket: "np-tcasverified.firebasestorage.app",
+  messagingSenderId: "1046291797340",
+  appId: "1:1046291797340:web:d4a1023810adfad25bdd99"
 };
 
 firebase.initializeApp(firebaseConfig);
