@@ -69,8 +69,8 @@ function buildYearOptions() {
 document.getElementById("f_file").addEventListener("change", (e) => {
   const file = e.target.files[0];
   if (!file) return;
-  if (file.size > 10 * 1024 * 1024) {
-    showToast("ไฟล์ใหญ่เกิน 10MB", "error");
+  if (file.size > 6 * 1024 * 1024) {
+    showToast("ไฟล์ใหญ่เกิน 6MB", "error");
     e.target.value = "";
     return;
   }
@@ -88,15 +88,26 @@ document.getElementById("submitForm").addEventListener("submit", async (e) => {
 
   const btn = document.getElementById("submitBtn");
   btn.disabled = true;
-  btn.innerHTML = "กำลังอัปโหลด...";
+  btn.innerHTML = "กำลังอัปโหลดไฟล์ขึ้น Drive...";
 
   try {
     const profile = currentCtx.profile;
     const activityRef = db.collection("activities").doc();
 
-    const filePath = `certificates/${currentCtx.user.uid}/${activityRef.id}_${selectedFile.name}`;
-    const uploadTask = await storage.ref(filePath).put(selectedFile);
-    const certificateUrl = await uploadTask.ref.getDownloadURL();
+    const fileBase64 = await fileToBase64(selectedFile);
+    const idToken = await currentCtx.user.getIdToken();
+
+    const uploadRes = await fetch(DRIVE_UPLOAD_URL, {
+      method: "POST",
+      headers: { "Content-Type": "application/json", Authorization: "Bearer " + idToken },
+      body: JSON.stringify({
+        fileName: selectedFile.name,
+        mimeType: selectedFile.type || "application/octet-stream",
+        fileBase64,
+      }),
+    });
+    const uploadData = await uploadRes.json();
+    if (!uploadRes.ok) throw new Error(uploadData.error || "upload failed");
 
     await activityRef.set({
       studentUid: currentCtx.user.uid,
@@ -109,7 +120,8 @@ document.getElementById("submitForm").addEventListener("submit", async (e) => {
       department: document.getElementById("f_department").value,
       eventDate: document.getElementById("f_date").value,
       year: Number(document.getElementById("f_year").value),
-      certificateUrl,
+      certificateUrl: uploadData.url,
+      certificateFileId: uploadData.fileId,
       certificateFileName: selectedFile.name,
       status: "submitted",
       revisionReason: null,
@@ -130,3 +142,13 @@ document.getElementById("submitForm").addEventListener("submit", async (e) => {
     lucide.createIcons();
   }
 });
+
+/** อ่านไฟล์เป็น base64 (ตัด prefix "data:...;base64," ออกก่อนส่งให้ Cloud Function) */
+function fileToBase64(file) {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = () => resolve(reader.result.split(",")[1]);
+    reader.onerror = reject;
+    reader.readAsDataURL(file);
+  });
+}

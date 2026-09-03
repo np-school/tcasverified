@@ -27,7 +27,7 @@ students/{uid}              → { prefix, firstName, lastName, nationalId, level
 activities/{id}              → {
   studentUid, studentName, studentLevel, studentRoom, studentTrack,
   title, type, department, eventDate, year,
-  certificateUrl, certificateFileName,
+  certificateUrl, certificateFileId, certificateFileName,
   status: 'submitted' | 'dept_confirmed' | 'guidance_confirmed' | 'revision',
   revisionReason, deptReviewerEmail, deptReviewedAt,
   guidanceReviewerEmail, guidanceReviewedAt, createdAt
@@ -37,32 +37,32 @@ settings/activityTypes       → { types: string[] }
 settings/departments         → { departments: string[] }
 ```
 
-Storage: `certificates/{studentUid}/{activityId}_{fileName}`
+**ไฟล์เกียรติบัตร** ไม่ได้เก็บใน Firebase Storage แต่อัปโหลดผ่าน Cloud Function
+(`functions-drive-upload/`) เข้าโฟลเดอร์ **Google Drive กลางของโรงเรียน** โดยใช้ service account
+เป็นคนเขียนไฟล์แทนผู้ใช้แต่ละคน แล้วแชร์สิทธิ์อ่านให้ทุกคนในโดเมน @nongki.ac.th — วิธี deploy
+ดูที่ `functions-drive-upload/DEPLOY.md` (ทำผ่าน Google Cloud Console ล้วนๆ ไม่ต้องใช้ CLI)
 
 ## ขั้นตอนติดตั้ง
 
 1. **สร้างโปรเจกต์ Firebase ใหม่** (แยกจากโปรเจกต์เดิม) ที่ https://console.firebase.google.com
 2. **เปิดใช้ Authentication → Sign-in method → Google**
 3. **เปิดใช้ Firestore Database** (โหมด production)
-4. **เปิดใช้ Storage**
-5. คัดลอกค่า config จาก Project settings → General → Your apps → Web app
+4. คัดลอกค่า config จาก Project settings → General → Your apps → Web app
    มาใส่ใน `shared/firebase-init.js` แทนค่า `YOUR_...`
-6. Deploy security rules (ต้องมี Firebase CLI):
-   ```bash
-   firebase deploy --only firestore:rules,storage:rules
-   ```
+5. Deploy Firestore security rules: เปิด Firestore Database → แท็บ Rules → วางเนื้อหาจาก
+   `firestore.rules` → Publish
+6. **Deploy Cloud Function สำหรับอัปโหลดเกียรติบัตรเข้า Drive กลาง** — ทำตาม
+   `functions-drive-upload/DEPLOY.md` ทั้งหมด แล้วเอา Trigger URL ที่ได้มาใส่ใน
+   `shared/firebase-init.js` ตัวแปร `DRIVE_UPLOAD_URL`
 7. **สร้างแอดมินคนแรกด้วยมือ** (เพราะ admin.html ต้องมี admin อยู่ก่อนถึงจะเข้าได้):
    ไปที่ Firestore Console → สร้าง collection `permissions` → เพิ่มเอกสารรหัส
-   เป็นอีเมลของคุณ เช่น `admin@nongki.ac.th` → ใส่ field `role: "admin"`
+   เป็นอีเมลของคุณ เช่น `admin@nongki.ac.th` → ใส่ field `role: "admin"` (ตัวพิมพ์เล็กล้วน)
 8. ตั้งค่าตัวเลือกเริ่มต้น (ไม่บังคับ ถ้าไม่ตั้งระบบจะใช้ค่า default ในโค้ดไปก่อน):
    เข้า `admin.html` → แท็บ "ห้องเรียน/กลุ่มการเรียน" และ "หัวข้อ/กลุ่มสาระ" → กรอกแล้วบันทึก
 9. เพิ่มครูประจำกลุ่มสาระ/ครูแนะแนวที่เหลือผ่านหน้า `admin.html` ได้เลย (ไม่ต้องเข้า Console อีก)
-10. โฮสต์ไฟล์ทั้งหมดด้วย Firebase Hosting หรือเว็บ static host ใดก็ได้:
-    ```bash
-    firebase deploy --only hosting
-    ```
-    หรือถ้าใช้ Firebase Hosting ต้องเพิ่มโดเมนที่ deploy ไว้ใน
-    Authentication → Settings → Authorized domains ด้วย ไม่งั้น popup ล็อกอินจะ error
+10. โฮสต์ไฟล์ทั้งหมด (`index.html`, `*.html`, `shared/`, `js/` — ไม่รวม `functions-drive-upload/`)
+    ด้วย GitHub Pages หรือเว็บ static host ใดก็ได้ แล้วเพิ่มโดเมนนั้นใน
+    Authentication → Settings → Authorized domains ไม่งั้น popup ล็อกอินจะ error
 
 ## จุดที่ควรตรวจสอบ/ต่อยอดก่อนใช้งานจริง
 

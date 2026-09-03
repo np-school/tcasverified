@@ -44,7 +44,7 @@
           <label>ไฟล์เกียรติบัตร / หลักฐาน <span class="req">*</span></label>
           <label class="upload-box" id="uploadBox" for="f_file">
             <i data-lucide="upload-cloud" style="width:22px;height:22px;margin-bottom:6px;"></i>
-            <div id="uploadLabel">คลิกเพื่อเลือกไฟล์ (PDF หรือรูปภาพ ไม่เกิน 10MB)</div>
+            <div id="uploadLabel">คลิกเพื่อเลือกไฟล์ (PDF หรือรูปภาพ ไม่เกิน 6MB) — จะถูกเก็บใน Google Drive กลางของโรงเรียน</div>
           </label>
           <input id="f_file" type="file" accept=".pdf,image/*" required style="display:none;">
         </div>
@@ -63,7 +63,6 @@
 <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-auth-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-storage-compat.js"></script>
 <script src="shared/firebase-init.js"></script>
 <script src="shared/auth-guard.js"></script>
 <script src="js/student-submit.js"></script>

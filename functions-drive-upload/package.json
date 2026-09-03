@@ -1,0 +1,10 @@
+{
+  "name": "np-tcas-verified-drive-upload",
+  "version": "1.0.0",
+  "main": "index.js",
+  "engines": { "node": "20" },
+  "dependencies": {
+    "firebase-admin": "^12.1.0",
+    "googleapis": "^131.0.0"
+  }
+}
