@@ -111,12 +111,15 @@ exports.uploadCertificate = async (req, res) => {
     }
 
     // ── 2. ตรวจไฟล์และข้อมูลกิจกรรมที่ส่งมา ──
-    const { fileName, mimeType, fileBase64, studentId, year, category, eventDate, activityName } =
-      req.body || {};
+    // เลขประจำตัวนักเรียน ดึงจากอีเมลที่ล็อกอินจริง (ส่วนหน้า @) เช่น 12345@nongki.ac.th → 12345
+    // ไม่รับ studentId จาก client เพื่อกันการปลอมแปลง เพราะ decoded.email ผ่านการยืนยันจาก Firebase แล้ว
+    const studentId = decoded.email.split("@")[0];
+
+    const { fileName, mimeType, fileBase64, year, category, eventDate, activityName } = req.body || {};
     if (!fileName || !mimeType || !fileBase64) {
       return res.status(400).json({ error: "missing fields" });
     }
-    if (!studentId || !year || !category || !eventDate || !activityName) {
+    if (!year || !category || !eventDate || !activityName) {
       return res.status(400).json({ error: "missing activity fields" });
     }
     if (!/^application\/pdf$|^image\//.test(mimeType)) {

@@ -46,6 +46,11 @@ function updateRoomOptions() {
   fillSelect("f_room", rooms);
 }
 
+/** ดึงเลขประจำตัวนักเรียนจากอีเมลที่ล็อกอิน เช่น "12345@nongki.ac.th" → "12345" */
+function studentIdFromEmail(email) {
+  return String(email || "").split("@")[0];
+}
+
 function prefillForm(profile) {
   document.getElementById("f_prefix").value = profile.prefix || "";
   document.getElementById("f_firstName").value = profile.firstName || "";
@@ -55,12 +60,13 @@ function prefillForm(profile) {
   updateRoomOptions();
   document.getElementById("f_room").value = profile.room || "";
   document.getElementById("f_track").value = profile.track || "";
-  document.getElementById("f_studentId").value = profile.studentId || "";
 }
 
 guardPage(["student_new", "student", "admin"], async (ctx) => {
   currentCtx = ctx;
   await loadAcademicSettings();
+  // เลขประจำตัวนักเรียน = ส่วนหน้า @ ของอีเมลที่ล็อกอินเสมอ ไม่ให้แก้ไขเอง
+  document.getElementById("f_studentId").value = studentIdFromEmail(ctx.user.email);
   if ((ctx.role === "student" || ctx.role === "admin") && ctx.profile) prefillForm(ctx.profile);
   if (ctx.role === "admin") {
     renderAdminViewSwitch("onboarding.html");
@@ -89,7 +95,7 @@ document.getElementById("onboardForm").addEventListener("submit", async (e) => {
     level: document.getElementById("f_level").value,
     room: document.getElementById("f_room").value,
     track: document.getElementById("f_track").value,
-    studentId: document.getElementById("f_studentId").value.trim() || null,
+    studentId: studentIdFromEmail(currentCtx.user.email), // มาจากอีเมลเสมอ ไม่รับค่าจากฟอร์ม
     email: currentCtx.user.email,
     updatedAt: firebase.firestore.FieldValue.serverTimestamp(),
   };

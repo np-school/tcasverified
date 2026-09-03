@@ -99,8 +99,6 @@ document.getElementById("submitForm").addEventListener("submit", async (e) => {
     const department = document.getElementById("f_department").value;
     const eventDate = document.getElementById("f_date").value;
     const year = document.getElementById("f_year").value;
-    // เลขประจำตัวนักเรียน — ถ้าไม่มีในโปรไฟล์ (ยังไม่ได้กรอกตอน onboarding) ใช้ uid สำรองกันชื่อโฟลเดอร์ชนกัน
-    const studentId = profile.studentId || currentCtx.user.uid;
 
     const fileBase64 = await fileToBase64(selectedFile);
     const idToken = await currentCtx.user.getIdToken();
@@ -112,7 +110,6 @@ document.getElementById("submitForm").addEventListener("submit", async (e) => {
         fileName: selectedFile.name,
         mimeType: selectedFile.type || "application/octet-stream",
         fileBase64,
-        studentId,
         year,
         category: type, // "หมวดหมู่" ในชื่อไฟล์ = ประเภทกิจกรรม
         eventDate,

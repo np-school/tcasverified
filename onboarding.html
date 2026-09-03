@@ -49,7 +49,11 @@
           <select id="f_track" required><option value="">- เลือกกลุ่มการเรียน -</option></select>
           <div class="hint">ใช้กำหนดว่ากิจกรรมของคุณจะถูกส่งไปให้ครูกลุ่มสาระท่านใดตรวจก่อน</div>
         </div>
-        <div class="field"><label>เลขประจำตัวนักเรียน</label><input id="f_studentId" placeholder="ไม่บังคับ"></div>
+        <div class="field">
+          <label>เลขประจำตัวนักเรียน</label>
+          <input id="f_studentId" readonly style="background:var(--c-bg,#f3f4f6);cursor:not-allowed;">
+          <div class="hint">ดึงมาจากอีเมลที่ล็อกอินอัตโนมัติ แก้ไขเองไม่ได้ — ใช้เป็นรหัสหลักอ้างอิงไฟล์เกียรติบัตรของคุณทุกใบ</div>
+        </div>
       </div>
     </div>
 
