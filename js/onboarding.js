@@ -64,6 +64,8 @@ function prefillForm(profile) {
 
 guardPage(["student_new", "student", "admin"], async (ctx) => {
   currentCtx = ctx;
+  document.getElementById("userLabel").textContent =
+    ctx.profile ? ctx.profile.firstName + " " + ctx.profile.lastName : ctx.user.email;
   await loadAcademicSettings();
   // เลขประจำตัวนักเรียน = ส่วนหน้า @ ของอีเมลที่ล็อกอินเสมอ ไม่ให้แก้ไขเอง
   document.getElementById("f_studentId").value = studentIdFromEmail(ctx.user.email);
