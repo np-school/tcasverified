@@ -93,6 +93,47 @@ td{padding:12px;border-bottom:1px solid var(--border-soft);font-size:13.5px;vert
 .form-grid .field.full{grid-column:span 2;}
 @media (max-width:640px){.form-grid{grid-template-columns:1fr;}}
 
+/* ── Responsive: มือถือ/แท็บเล็ตแนวตั้ง ── */
+@media (max-width:860px){
+  .navbar{padding:12px 14px;}
+  .navbar-title{font-size:14px;}
+  .navbar-subtitle{font-size:10px;}
+  .navbar-mark{width:32px;height:32px;}
+  .navbar-user span{display:none;} /* ซ่อนชื่อผู้ใช้ ให้เหลือแค่ปุ่มออกจากระบบ ประหยัดพื้นที่ */
+
+  .shell{flex-direction:column;min-height:0;}
+  .sidebar{
+    width:100%;
+    display:flex;
+    flex-direction:row;
+    overflow-x:auto;
+    -webkit-overflow-scrolling:touch;
+    border-right:none;
+    border-bottom:1px solid var(--border);
+    padding:8px 10px;
+    gap:4px;
+    scrollbar-width:thin;
+  }
+  .sidebar-btn{
+    flex-shrink:0;
+    white-space:nowrap;
+    margin-bottom:0;
+    padding:9px 12px;
+    font-size:13px;
+  }
+  .content{padding:16px 14px;}
+  .page-title{font-size:17px;}
+
+  /* ตารางข้อมูล: ให้เลื่อนแนวนอนแทนการถูกตัดขอบ */
+  .card{overflow-x:auto !important;}
+  .card table{min-width:560px;}
+}
+
+@media (max-width:420px){
+  .navbar-subtitle{display:none;}
+  .login-card{padding:28px 20px;}
+}
+
 .subtabs{display:flex;gap:6px;margin-bottom:18px;background:var(--bg-alt);padding:4px;border-radius:12px;width:fit-content;}
 .subtabs button{padding:8px 14px;border-radius:9px;border:none;background:none;font-weight:700;font-size:13px;color:var(--text2);cursor:pointer;}
 .subtabs button.active{background:#fff;color:var(--text);box-shadow:0 1px 4px rgba(0,0,0,.08);}
