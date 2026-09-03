@@ -29,7 +29,13 @@ async function resolveUserContext(user) {
   const permSnap = await db.collection("permissions").doc(user.email.toLowerCase()).get();
   if (permSnap.exists) {
     const perm = permSnap.data();
-    return { role: perm.role, department: perm.department || null, user };
+    const ctx = { role: perm.role, department: perm.department || null, user };
+    // แอดมินอาจมีโปรไฟล์นักเรียนของตัวเอง (สร้างไว้ทดสอบ) ให้แนบมาด้วยถ้ามี
+    if (perm.role === "admin") {
+      const studentSnap = await db.collection("students").doc(user.uid).get();
+      if (studentSnap.exists) ctx.profile = studentSnap.data();
+    }
+    return ctx;
   }
 
   const studentSnap = await db.collection("students").doc(user.uid).get();
@@ -81,7 +87,14 @@ function guardPage(allowedRoles, onReady) {
     }
 
     if (!allowedRoles.includes(ctx.role)) {
-      window.location.href = routeForRole(ctx) || "index.html";
+      const target = routeForRole(ctx);
+      if (!target) {
+        alert("บัญชีนี้มีสิทธิ์ที่ระบบไม่รู้จัก (role ผิดรูปแบบใน permissions) กรุณาแจ้งผู้ดูแลระบบ");
+        await auth.signOut();
+        window.location.href = "index.html";
+        return;
+      }
+      window.location.href = target;
       return;
     }
 
@@ -106,4 +119,33 @@ function formatDate(ts) {
   if (!ts) return "-";
   const d = ts.toDate ? ts.toDate() : new Date(ts);
   return d.toLocaleDateString("th-TH", { year: "numeric", month: "short", day: "numeric" });
+}
+
+/**
+ * แถบลอยมุมล่างขวา ให้แอดมินสลับไปดูหน้าของสิทธิ์อื่นได้ทันที เพื่อความสะดวกตอนพัฒนา/ทดสอบ
+ * เรียกจากหน้าไหนก็ได้หลัง guardPage สำเร็จ ถ้า ctx.role !== 'admin' จะไม่ทำอะไรเลย
+ */
+function renderAdminViewSwitch(currentPage) {
+  const pages = [
+    { href: "student-history.html", label: "มุมมองนักเรียน", icon: "user" },
+    { href: "teacher-review.html", label: "มุมมองครูกลุ่มสาระ", icon: "clipboard-check" },
+    { href: "guidance.html", label: "มุมมองครูแนะแนว", icon: "badge-check" },
+    { href: "admin.html", label: "มุมมองแอดมิน", icon: "settings" },
+  ];
+  const bar = document.createElement("div");
+  bar.style.cssText =
+    "position:fixed;bottom:18px;right:18px;background:var(--c-ink-deep);padding:6px;border-radius:14px;display:flex;gap:5px;z-index:3500;box-shadow:0 6px 20px rgba(0,0,0,.28);";
+  pages.forEach((p) => {
+    const a = document.createElement("a");
+    a.href = p.href;
+    a.title = p.label;
+    const isCurrent = p.href === currentPage;
+    a.style.cssText =
+      "width:38px;height:38px;border-radius:10px;display:flex;align-items:center;justify-content:center;color:#fff;text-decoration:none;" +
+      (isCurrent ? "background:var(--accent);" : "background:rgba(255,255,255,.1);");
+    a.innerHTML = `<i data-lucide="${p.icon}" style="width:17px;height:17px"></i>`;
+    bar.appendChild(a);
+  });
+  document.body.appendChild(bar);
+  if (window.lucide) lucide.createIcons();
 }

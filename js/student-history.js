@@ -1,7 +1,21 @@
 lucide.createIcons();
 let allActivities = [];
 
-guardPage(["student"], (ctx) => {
+guardPage(["student", "admin"], (ctx) => {
+  if (ctx.role === "admin") renderAdminViewSwitch("student-history.html");
+
+  if (!ctx.profile) {
+    document.getElementById("userLabel").textContent = ctx.user.email;
+    document.querySelector(".content").innerHTML = `
+      <div class="empty-state">
+        <i data-lucide="user-x" style="width:36px;height:36px;margin-bottom:10px;"></i>
+        <div>บัญชีแอดมินนี้ยังไม่มีโปรไฟล์นักเรียนทดสอบ</div>
+        <a href="onboarding.html" class="btn-primary" style="margin-top:14px;display:inline-flex;">ไปกรอกข้อมูลทดสอบ</a>
+      </div>`;
+    lucide.createIcons();
+    return;
+  }
+
   document.getElementById("userLabel").textContent = ctx.profile.firstName + " " + ctx.profile.lastName;
   buildYearFilter();
   loadActivities(ctx.user.uid);

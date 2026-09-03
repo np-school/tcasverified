@@ -28,7 +28,10 @@
   </div>
   <div class="content">
     <div class="tab-panel active" id="tab-pending">
-      <div class="page-header"><div class="page-title">รายการรอตรวจสอบ</div><div class="page-sub">ยืนยันความถูกต้องของกิจกรรมและเกียรติบัตรก่อนส่งต่อครูแนะแนว</div></div>
+      <div class="page-header" style="display:flex;justify-content:space-between;align-items:flex-end;flex-wrap:wrap;gap:10px;">
+        <div><div class="page-title">รายการรอตรวจสอบ</div><div class="page-sub">ยืนยันความถูกต้องของกิจกรรมและเกียรติบัตรก่อนส่งต่อครูแนะแนว</div></div>
+        <select id="deptFilter" style="display:none;"></select>
+      </div>
       <div class="card" style="padding:0;overflow:hidden;">
         <table id="pendingTable">
           <thead><tr><th>นักเรียน</th><th>กิจกรรม</th><th>วันที่ยื่น</th><th>เกียรติบัตร</th><th>ดำเนินการ</th></tr></thead>

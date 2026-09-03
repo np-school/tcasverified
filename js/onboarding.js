@@ -58,10 +58,18 @@ function prefillForm(profile) {
   document.getElementById("f_studentId").value = profile.studentId || "";
 }
 
-guardPage(["student_new", "student"], async (ctx) => {
+guardPage(["student_new", "student", "admin"], async (ctx) => {
   currentCtx = ctx;
   await loadAcademicSettings();
-  if (ctx.role === "student" && ctx.profile) prefillForm(ctx.profile);
+  if ((ctx.role === "student" || ctx.role === "admin") && ctx.profile) prefillForm(ctx.profile);
+  if (ctx.role === "admin") {
+    renderAdminViewSwitch("onboarding.html");
+    const note = document.createElement("div");
+    note.className = "hint";
+    note.style.cssText = "text-align:center;margin-bottom:14px;";
+    note.textContent = "โหมดแอดมิน: กรอกไว้เพื่อสร้างโปรไฟล์นักเรียนทดสอบของบัญชีนี้ ใช้สำหรับดูมุมมองนักเรียนเท่านั้น";
+    document.querySelector(".onboard-wrap").prepend(note);
+  }
 });
 
 document.getElementById("onboardForm").addEventListener("submit", async (e) => {

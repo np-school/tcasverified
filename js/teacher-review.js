@@ -2,13 +2,37 @@ lucide.createIcons();
 let ctxGlobal = null;
 let pendingRejectId = null;
 
-guardPage(["dept_teacher"], (ctx) => {
+guardPage(["dept_teacher", "admin"], async (ctx) => {
   ctxGlobal = ctx;
   document.getElementById("userLabel").textContent = ctx.user.email;
-  document.getElementById("deptLabel").textContent = "ครูประจำกลุ่มสาระ" + (ctx.department ? " · " + ctx.department : "");
+
+  if (ctx.role === "admin") {
+    renderAdminViewSwitch("teacher-review.html");
+    document.getElementById("deptLabel").textContent = "มุมมองครูประจำกลุ่มสาระ (แอดมิน)";
+    await setupDeptFilterForAdmin();
+  } else {
+    document.getElementById("deptLabel").textContent = "ครูประจำกลุ่มสาระ" + (ctx.department ? " · " + ctx.department : "");
+  }
+
   loadPending();
   loadDone();
 });
+
+async function setupDeptFilterForAdmin() {
+  const sel = document.getElementById("deptFilter");
+  try {
+    const deptSnap = await db.collection("settings").doc("departments").get();
+    const departments = (deptSnap.exists && deptSnap.data().departments) || [];
+    sel.innerHTML = '<option value="">ทุกกลุ่มสาระ</option>' + departments.map((d) => `<option>${d}</option>`).join("");
+  } catch (err) {
+    sel.innerHTML = '<option value="">ทุกกลุ่มสาระ</option>';
+  }
+  sel.style.display = "block";
+  sel.addEventListener("change", () => {
+    ctxGlobal.department = sel.value || null;
+    loadPending();
+  });
+}
 
 document.querySelectorAll(".sidebar-btn[data-tab]").forEach((btn) => {
   btn.addEventListener("click", () => {
@@ -21,11 +45,9 @@ document.querySelectorAll(".sidebar-btn[data-tab]").forEach((btn) => {
 
 async function loadPending() {
   try {
-    const snap = await db.collection("activities")
-      .where("status", "==", "submitted")
-      .where("department", "==", ctxGlobal.department)
-      .orderBy("createdAt", "asc")
-      .get();
+    let q = db.collection("activities").where("status", "==", "submitted");
+    if (ctxGlobal.department) q = q.where("department", "==", ctxGlobal.department);
+    const snap = await q.orderBy("createdAt", "asc").get();
 
     const body = document.getElementById("pendingBody");
     body.innerHTML = "";

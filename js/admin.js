@@ -10,6 +10,7 @@ const DEFAULT_ACADEMIC = {
 
 guardPage(["admin"], (ctx) => {
   document.getElementById("userLabel").textContent = ctx.user.email;
+  renderAdminViewSwitch("admin.html");
   loadDeptTeachers();
   loadGuidanceTeachers();
   loadAcademic();

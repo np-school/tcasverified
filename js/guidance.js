@@ -1,9 +1,10 @@
 lucide.createIcons();
 let ctxGlobal = null;
 
-guardPage(["guidance"], (ctx) => {
+guardPage(["guidance", "admin"], (ctx) => {
   ctxGlobal = ctx;
   document.getElementById("userLabel").textContent = ctx.user.email;
+  if (ctx.role === "admin") renderAdminViewSwitch("guidance.html");
   buildYearOptions("allYearFilter");
   buildYearOptions("exportYearFilter");
   loadPending();
