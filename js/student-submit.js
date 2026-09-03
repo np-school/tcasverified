@@ -94,6 +94,14 @@ document.getElementById("submitForm").addEventListener("submit", async (e) => {
     const profile = currentCtx.profile;
     const activityRef = db.collection("activities").doc();
 
+    const title = document.getElementById("f_title").value.trim();
+    const type = document.getElementById("f_type").value;
+    const department = document.getElementById("f_department").value;
+    const eventDate = document.getElementById("f_date").value;
+    const year = document.getElementById("f_year").value;
+    // เลขประจำตัวนักเรียน — ถ้าไม่มีในโปรไฟล์ (ยังไม่ได้กรอกตอน onboarding) ใช้ uid สำรองกันชื่อโฟลเดอร์ชนกัน
+    const studentId = profile.studentId || currentCtx.user.uid;
+
     const fileBase64 = await fileToBase64(selectedFile);
     const idToken = await currentCtx.user.getIdToken();
 
@@ -104,6 +112,11 @@ document.getElementById("submitForm").addEventListener("submit", async (e) => {
         fileName: selectedFile.name,
         mimeType: selectedFile.type || "application/octet-stream",
         fileBase64,
+        studentId,
+        year,
+        category: type, // "หมวดหมู่" ในชื่อไฟล์ = ประเภทกิจกรรม
+        eventDate,
+        activityName: title,
       }),
     });
     const uploadData = await uploadRes.json();
@@ -115,11 +128,11 @@ document.getElementById("submitForm").addEventListener("submit", async (e) => {
       studentLevel: profile.level,
       studentRoom: profile.room,
       studentTrack: profile.track,
-      title: document.getElementById("f_title").value.trim(),
-      type: document.getElementById("f_type").value,
-      department: document.getElementById("f_department").value,
-      eventDate: document.getElementById("f_date").value,
-      year: Number(document.getElementById("f_year").value),
+      title,
+      type,
+      department,
+      eventDate,
+      year: Number(year),
       certificateUrl: uploadData.url,
       certificateFileId: uploadData.fileId,
       certificateFileName: selectedFile.name,
