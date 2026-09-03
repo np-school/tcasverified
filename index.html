@@ -7,6 +7,37 @@
 <link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 <link href="shared/styles.css" rel="stylesheet">
 <script src="https://unpkg.com/lucide@1.24.0"></script>
+<style>
+  /* ── หน้าแรก: โซนโชว์ผลงานที่ยืนยันแล้ว (public, ไม่ต้องล็อกอิน) ── */
+  .login-wrap{min-height:auto;padding:56px 20px 20px;}
+  .showcase{max-width:1160px;margin:0 auto;padding:0 20px 60px;}
+  .showcase-header{display:flex;align-items:center;gap:10px;margin-bottom:4px;}
+  .showcase-title{font-size:17px;font-weight:800;display:flex;align-items:center;gap:8px;}
+  .showcase-sub{font-size:13px;color:var(--text2);margin:4px 0 20px;}
+  .showcase-loading{display:flex;align-items:center;gap:10px;color:var(--text2);font-size:13px;font-weight:700;padding:30px 0;justify-content:center;}
+  .spinner-sm{width:20px;height:20px;border:2.5px solid var(--border);border-top:2.5px solid var(--accent);border-radius:50%;animation:spin .8s linear infinite;flex-shrink:0;}
+
+  .cert-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(230px,1fr));gap:14px;}
+  .cert-card{background:#fff;border:1px solid var(--border);border-radius:16px;overflow:hidden;box-shadow:0 2px 8px rgba(0,0,0,.04);display:flex;flex-direction:column;transition:box-shadow .15s,transform .15s;}
+  .cert-card:hover{box-shadow:0 8px 20px rgba(0,0,0,.09);transform:translateY(-2px);}
+  .cert-thumb-wrap{position:relative;aspect-ratio:4/3;background:var(--bg-alt);display:flex;align-items:center;justify-content:center;overflow:hidden;}
+  .cert-thumb-wrap img{width:100%;height:100%;object-fit:cover;display:block;}
+  .cert-thumb-fallback{display:flex;flex-direction:column;align-items:center;gap:6px;color:var(--text3);font-size:11px;}
+  .cert-thumb-badge{position:absolute;top:8px;left:8px;}
+  .cert-body{padding:12px 14px 14px;display:flex;flex-direction:column;gap:6px;flex:1;}
+  .cert-type{font-size:10.5px;font-weight:800;color:var(--accent);letter-spacing:.2px;}
+  .cert-title{font-size:13.5px;font-weight:700;line-height:1.35;color:var(--text);}
+  .cert-detail{font-size:11.5px;color:var(--text2);line-height:1.5;}
+  .cert-student{font-size:11.5px;color:var(--text);font-weight:700;display:flex;align-items:center;gap:5px;}
+  .cert-student span.dim{color:var(--text3);font-weight:600;}
+  .cert-footer{margin-top:auto;display:flex;align-items:center;justify-content:space-between;gap:8px;padding-top:8px;border-top:1px solid var(--border-soft);}
+  .cert-date{font-size:11px;color:var(--text3);}
+  .cert-link{font-size:11.5px;color:var(--accent);font-weight:700;display:flex;align-items:center;gap:4px;text-decoration:none;flex-shrink:0;}
+
+  @media (max-width:420px){
+    .cert-grid{grid-template-columns:repeat(auto-fill,minmax(150px,1fr));}
+  }
+</style>
 </head>
 <body>
 
@@ -27,11 +58,27 @@
   </div>
 </div>
 
+<section class="showcase">
+  <div class="showcase-header">
+    <i data-lucide="sparkles" style="width:19px;height:19px;color:var(--accent)"></i>
+    <div class="showcase-title">ผลงานที่ยืนยันล่าสุด</div>
+  </div>
+  <div class="showcase-sub">เกียรติบัตร กิจกรรม และผลงาน 20 รายการล่าสุดที่ครูกลุ่มสาระตรวจสอบและรับรองแล้ว</div>
+
+  <div id="showcaseLoading" class="showcase-loading"><div class="spinner-sm"></div>กำลังโหลดผลงานล่าสุด...</div>
+  <div id="showcaseEmpty" class="empty-state" style="display:none;">
+    <i data-lucide="inbox" style="width:32px;height:32px;margin-bottom:8px;"></i>
+    <div>ยังไม่มีผลงานที่ครูกลุ่มสาระรับรองแล้ว</div>
+  </div>
+  <div id="showcaseGrid" class="cert-grid"></div>
+</section>
+
 <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-auth-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore-compat.js"></script>
 <script src="shared/firebase-init.js"></script>
 <script src="shared/auth-guard.js"></script>
+<script src="shared/status-meta.js"></script>
 <script src="js/index.js"></script>
 </body>
 </html>
