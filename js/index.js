@@ -49,6 +49,7 @@ loadShowcase();
 async function loadShowcase() {
   const loadingEl = document.getElementById("showcaseLoading");
   const emptyEl = document.getElementById("showcaseEmpty");
+  const countEl = document.getElementById("showcaseCount");
   const grid = document.getElementById("showcaseGrid");
 
   try {
@@ -66,6 +67,9 @@ async function loadShowcase() {
       emptyEl.style.display = "block";
       return;
     }
+
+    countEl.textContent = "ล่าสุด " + items.length + " รายการ";
+    countEl.style.display = "inline-flex";
 
     items.forEach((a) => grid.appendChild(showcaseCard(a)));
     lucide.createIcons();
@@ -94,7 +98,8 @@ function showcaseCard(a) {
       <div class="cert-thumb-badge">${statusBadgeHtml(a.status)}</div>
     </div>
     <div class="cert-body">
-      <div class="cert-type">${escapeHtml(a.type || a.department || "")}</div>
+      ${a.department ? `<span class="role-tag dept cert-dept">${escapeHtml(a.department)}</span>` : ""}
+      ${a.type ? `<div class="cert-type">${escapeHtml(a.type)}</div>` : ""}
       <div class="cert-title">${escapeHtml(a.title)}</div>
       ${recordDetailLine(a) ? `<div class="cert-detail">${escapeHtml(recordDetailLine(a))}</div>` : ""}
       <div class="cert-student">

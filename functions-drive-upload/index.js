@@ -154,10 +154,15 @@ exports.uploadCertificate = async (req, res) => {
       supportsAllDrives: true, // จำเป็นเมื่อ DRIVE_FOLDER_ID อยู่ใน Shared Drive
     });
 
-    // ── 4. แชร์สิทธิ์อ่านให้ทุกคนในโดเมนโรงเรียน (ไม่เปิด public) ──
+    // ── 4. แชร์สิทธิ์อ่านแบบ "ใครมีลิงก์ก็ดูได้" (public) ──
+    // เปลี่ยนจาก type:"domain" เป็น type:"anyone" เพราะหน้า index.html โชว์รูปพรีวิว
+    // เกียรติบัตรแบบ public (ก่อนล็อกอิน) ผ่าน <img src="drive.google.com/thumbnail?...">
+    // ซึ่ง Google จะปฏิเสธการโหลดรูปถ้าไฟล์ยังจำกัดเฉพาะโดเมน @nongki.ac.th อยู่
+    // (เบราว์เซอร์ไม่มี cookie ล็อกอิน Google ของโดเมนแนบไปกับ request รูปภาพ)
+    // ผลคือไฟล์เกียรติบัตรเปิดดู/ดาวน์โหลดได้จากทุกคนที่มีลิงก์ตรงๆ ไม่ต้องล็อกอินอีกต่อไป
     await drive.permissions.create({
       fileId: created.data.id,
-      requestBody: { type: "domain", domain: ALLOWED_DOMAIN, role: "reader" },
+      requestBody: { type: "anyone", role: "reader" },
       supportsAllDrives: true, // จำเป็นเมื่อ DRIVE_FOLDER_ID อยู่ใน Shared Drive
     });
 
