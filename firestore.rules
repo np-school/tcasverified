@@ -1,0 +1,59 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    function isSignedIn() { return request.auth != null; }
+    function email() { return request.auth.token.email.lower(); }
+    function isSchoolAccount() {
+      return isSignedIn() && email().matches('.*@nongki[.]ac[.]th$');
+    }
+    function permissionDoc() {
+      return get(/databases/$(database)/documents/permissions/$(email()));
+    }
+    function hasRole(r) {
+      return isSchoolAccount()
+        && exists(/databases/$(database)/documents/permissions/$(email()))
+        && permissionDoc().data.role == r;
+    }
+    function isAdmin() { return hasRole('admin'); }
+    function isDeptTeacher() { return hasRole('dept_teacher'); }
+    function isGuidance() { return hasRole('guidance'); }
+    function isStudentOwner(uid) { return isSchoolAccount() && request.auth.uid == uid; }
+
+    // permissions/{email} — บอกว่าอีเมลนี้เป็น admin / dept_teacher (+department) / guidance
+    match /permissions/{email} {
+      allow read: if isSchoolAccount();
+      allow write: if isAdmin();
+    }
+
+    // students/{uid} — โปรไฟล์นักเรียน กรอกครั้งแรกตอนล็อกอิน
+    match /students/{uid} {
+      allow read: if isStudentOwner(uid) || isDeptTeacher() || isGuidance() || isAdmin();
+      allow create, update: if isStudentOwner(uid);
+      allow delete: if isAdmin();
+    }
+
+    // activities/{id} — รายการกิจกรรมที่ส่ง
+    match /activities/{id} {
+      allow read: if isSchoolAccount() &&
+        (resource.data.studentUid == request.auth.uid || isDeptTeacher() || isGuidance() || isAdmin());
+
+      allow create: if isSchoolAccount()
+        && request.resource.data.studentUid == request.auth.uid
+        && request.resource.data.status == 'submitted';
+
+      // ครูกลุ่มสาระ/ครูแนะแนว/แอดมิน แก้สถานะได้เสมอ
+      // นักเรียนแก้ได้เฉพาะตอนสถานะเป็น revision (ส่งใหม่)
+      allow update: if isDeptTeacher() || isGuidance() || isAdmin()
+        || (resource.data.studentUid == request.auth.uid && resource.data.status == 'revision');
+
+      allow delete: if isAdmin();
+    }
+
+    // settings/{doc} — activityTypes, departments, academic (ระดับชั้น/ห้อง/กลุ่มการเรียน)
+    match /settings/{doc} {
+      allow read: if isSchoolAccount();
+      allow write: if isAdmin();
+    }
+  }
+}

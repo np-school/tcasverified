@@ -1,0 +1,101 @@
+lucide.createIcons();
+
+const DEFAULT_ACADEMIC = {
+  levels: ["มัธยมศึกษาปีที่ 4", "มัธยมศึกษาปีที่ 5", "มัธยมศึกษาปีที่ 6"],
+  roomsPerLevel: {
+    "มัธยมศึกษาปีที่ 4": ["1", "2", "3", "4", "5"],
+    "มัธยมศึกษาปีที่ 5": ["1", "2", "3", "4", "5"],
+    "มัธยมศึกษาปีที่ 6": ["1", "2", "3", "4", "5"],
+  },
+  tracks: ["วิทย์-คณิต", "ศิลป์-ภาษา", "ศิลป์-คำนวณ"],
+};
+
+let academic = DEFAULT_ACADEMIC;
+let currentCtx = null;
+
+async function loadAcademicSettings() {
+  try {
+    const snap = await db.collection("settings").doc("academic").get();
+    if (snap.exists) academic = { ...DEFAULT_ACADEMIC, ...snap.data() };
+  } catch (err) {
+    console.warn("ใช้ค่าระดับชั้น/ห้อง/กลุ่มการเรียนเริ่มต้น เพราะยังไม่ได้ตั้งค่าใน settings/academic", err);
+  }
+
+  fillSelect("f_level", academic.levels);
+  fillSelect("f_track", academic.tracks);
+  document.getElementById("f_level").addEventListener("change", updateRoomOptions);
+  updateRoomOptions();
+}
+
+function fillSelect(id, values) {
+  const el = document.getElementById(id);
+  const placeholder = el.options[0];
+  el.innerHTML = "";
+  el.appendChild(placeholder);
+  values.forEach((v) => {
+    const opt = document.createElement("option");
+    opt.value = v;
+    opt.textContent = v;
+    el.appendChild(opt);
+  });
+}
+
+function updateRoomOptions() {
+  const level = document.getElementById("f_level").value;
+  const rooms = (academic.roomsPerLevel && academic.roomsPerLevel[level]) || [];
+  fillSelect("f_room", rooms);
+}
+
+function prefillForm(profile) {
+  document.getElementById("f_prefix").value = profile.prefix || "";
+  document.getElementById("f_firstName").value = profile.firstName || "";
+  document.getElementById("f_lastName").value = profile.lastName || "";
+  document.getElementById("f_nationalId").value = profile.nationalId || "";
+  document.getElementById("f_level").value = profile.level || "";
+  updateRoomOptions();
+  document.getElementById("f_room").value = profile.room || "";
+  document.getElementById("f_track").value = profile.track || "";
+  document.getElementById("f_studentId").value = profile.studentId || "";
+}
+
+guardPage(["student_new", "student"], async (ctx) => {
+  currentCtx = ctx;
+  await loadAcademicSettings();
+  if (ctx.role === "student" && ctx.profile) prefillForm(ctx.profile);
+});
+
+document.getElementById("onboardForm").addEventListener("submit", async (e) => {
+  e.preventDefault();
+  const btn = document.getElementById("submitBtn");
+  const nationalId = document.getElementById("f_nationalId").value.trim();
+  if (!/^\d{13}$/.test(nationalId)) {
+    showToast("เลขบัตรประชาชนต้องเป็นตัวเลข 13 หลัก", "error");
+    return;
+  }
+
+  const profile = {
+    prefix: document.getElementById("f_prefix").value,
+    firstName: document.getElementById("f_firstName").value.trim(),
+    lastName: document.getElementById("f_lastName").value.trim(),
+    nationalId,
+    level: document.getElementById("f_level").value,
+    room: document.getElementById("f_room").value,
+    track: document.getElementById("f_track").value,
+    studentId: document.getElementById("f_studentId").value.trim() || null,
+    email: currentCtx.user.email,
+    updatedAt: firebase.firestore.FieldValue.serverTimestamp(),
+  };
+
+  btn.disabled = true;
+  btn.textContent = "กำลังบันทึก...";
+  try {
+    await db.collection("students").doc(currentCtx.user.uid).set(profile, { merge: true });
+    window.location.href = "student-history.html";
+  } catch (err) {
+    console.error(err);
+    showToast("บันทึกไม่สำเร็จ ลองใหม่อีกครั้ง", "error");
+    btn.disabled = false;
+    btn.innerHTML = 'บันทึกและเข้าใช้งาน <i data-lucide="arrow-right" style="width:15px;height:15px"></i>';
+    lucide.createIcons();
+  }
+});

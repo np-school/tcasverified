@@ -1,0 +1,77 @@
+<!doctype html>
+<html lang="th">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>งานแนะแนว – NP-TCAS Verified</title>
+<link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<link href="shared/styles.css" rel="stylesheet">
+<script src="https://unpkg.com/lucide@1.24.0"></script>
+</head>
+<body>
+
+<div id="loadingOverlay"><div class="spinner"></div><p style="color:var(--text2);font-size:14px;font-weight:700;">กำลังตรวจสอบสิทธิ์...</p></div>
+<div id="toast"></div>
+
+<div class="navbar dark"><div class="navbar-inner">
+  <div class="navbar-brand">
+    <div class="navbar-mark"><i data-lucide="badge-check" style="width:20px;height:20px"></i></div>
+    <div><div class="navbar-title">NP-TCAS Verified</div><div class="navbar-subtitle">งานแนะแนว</div></div>
+  </div>
+  <div class="navbar-user"><span id="userLabel"></span><button class="navbar-logout" onclick="signOutUser()" title="ออกจากระบบ"><i data-lucide="log-out" style="width:16px;height:16px"></i></button></div>
+</div></div>
+
+<div class="shell">
+  <div class="sidebar">
+    <button class="sidebar-btn active staff" data-tab="pending"><i data-lucide="inbox" style="width:18px;height:18px"></i>รอยืนยันขั้นสุดท้าย <span id="pendingCount" style="margin-left:auto;"></span></button>
+    <button class="sidebar-btn" data-tab="all"><i data-lucide="users" style="width:18px;height:18px"></i>รายนักเรียนทั้งหมด</button>
+    <button class="sidebar-btn" data-tab="export"><i data-lucide="download" style="width:18px;height:18px"></i>ส่งออกข้อมูล</button>
+  </div>
+  <div class="content">
+
+    <div class="tab-panel active" id="tab-pending">
+      <div class="page-header"><div class="page-title">รอยืนยันขั้นสุดท้าย</div><div class="page-sub">ผ่านการยืนยันจากครูกลุ่มสาระแล้ว รอบันทึกเป็นรายการสมบูรณ์</div></div>
+      <div id="pendingList" style="display:flex;flex-direction:column;gap:12px;"></div>
+      <div id="pendingEmpty" class="empty-state" style="display:none;"><i data-lucide="inbox" style="width:36px;height:36px;margin-bottom:10px;"></i><div>ไม่มีรายการรอยืนยันตอนนี้</div></div>
+    </div>
+
+    <div class="tab-panel" id="tab-all">
+      <div class="page-header" style="display:flex;justify-content:space-between;align-items:flex-end;flex-wrap:wrap;gap:10px;">
+        <div><div class="page-title">รายนักเรียนที่ยืนยันสมบูรณ์แล้ว</div><div class="page-sub">กรองตามปีการศึกษา</div></div>
+        <select id="allYearFilter"></select>
+      </div>
+      <div class="card" style="padding:0;overflow:hidden;">
+        <table>
+          <thead><tr><th>นักเรียน</th><th>กิจกรรม</th><th>กลุ่มสาระ</th><th>ยืนยันเมื่อ</th></tr></thead>
+          <tbody id="allBody"></tbody>
+        </table>
+      </div>
+    </div>
+
+    <div class="tab-panel" id="tab-export">
+      <div class="page-header"><div class="page-title">ส่งออกข้อมูล</div><div class="page-sub">ส่งออกรายการที่ยืนยันสมบูรณ์แล้วเป็นไฟล์ CSV ตามปีการศึกษาที่เลือก</div></div>
+      <div class="card" style="max-width:520px;">
+        <div class="field" style="margin-bottom:16px;">
+          <label>ปีการศึกษา</label>
+          <select id="exportYearFilter"></select>
+        </div>
+        <button class="btn-primary" id="exportBtn"><i data-lucide="download" style="width:15px;height:15px"></i>ดาวน์โหลด CSV</button>
+        <div class="hint" style="margin-top:12px;">
+          ไฟล์ที่ได้เป็นคอลัมน์มาตรฐาน (ชื่อ-สกุล, ชั้น/ห้อง, ชื่อกิจกรรม, ประเภท, กลุ่มสาระ, วันที่จัด, ผู้ยืนยัน)
+          — ถ้ามีเทมเพลตที่ต้องใช้จริง ส่งไฟล์ตัวอย่างมาได้ จะปรับคอลัมน์ให้ตรงเป๊ะ
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-storage-compat.js"></script>
+<script src="shared/firebase-init.js"></script>
+<script src="shared/auth-guard.js"></script>
+<script src="shared/status-meta.js"></script>
+<script src="js/guidance.js"></script>
+</body>
+</html>

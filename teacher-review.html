@@ -1,0 +1,75 @@
+<!doctype html>
+<html lang="th">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ตรวจสอบกิจกรรม – NP-TCAS Verified</title>
+<link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<link href="shared/styles.css" rel="stylesheet">
+<script src="https://unpkg.com/lucide@1.24.0"></script>
+</head>
+<body>
+
+<div id="loadingOverlay"><div class="spinner"></div><p style="color:var(--text2);font-size:14px;font-weight:700;">กำลังตรวจสอบสิทธิ์...</p></div>
+<div id="toast"></div>
+
+<div class="navbar dark"><div class="navbar-inner">
+  <div class="navbar-brand">
+    <div class="navbar-mark"><i data-lucide="badge-check" style="width:20px;height:20px"></i></div>
+    <div><div class="navbar-title">NP-TCAS Verified</div><div class="navbar-subtitle" id="deptLabel">ครูประจำกลุ่มสาระ</div></div>
+  </div>
+  <div class="navbar-user"><span id="userLabel"></span><button class="navbar-logout" onclick="signOutUser()" title="ออกจากระบบ"><i data-lucide="log-out" style="width:16px;height:16px"></i></button></div>
+</div></div>
+
+<div class="shell">
+  <div class="sidebar">
+    <button class="sidebar-btn active staff" data-tab="pending"><i data-lucide="inbox" style="width:18px;height:18px"></i>รอตรวจสอบ <span id="pendingCount" style="margin-left:auto;"></span></button>
+    <button class="sidebar-btn" data-tab="done"><i data-lucide="history" style="width:18px;height:18px"></i>ตรวจแล้วทั้งหมด</button>
+  </div>
+  <div class="content">
+    <div class="tab-panel active" id="tab-pending">
+      <div class="page-header"><div class="page-title">รายการรอตรวจสอบ</div><div class="page-sub">ยืนยันความถูกต้องของกิจกรรมและเกียรติบัตรก่อนส่งต่อครูแนะแนว</div></div>
+      <div class="card" style="padding:0;overflow:hidden;">
+        <table id="pendingTable">
+          <thead><tr><th>นักเรียน</th><th>กิจกรรม</th><th>วันที่ยื่น</th><th>เกียรติบัตร</th><th>ดำเนินการ</th></tr></thead>
+          <tbody id="pendingBody"></tbody>
+        </table>
+      </div>
+      <div id="pendingEmpty" class="empty-state" style="display:none;"><i data-lucide="inbox" style="width:36px;height:36px;margin-bottom:10px;"></i><div>ไม่มีรายการรอตรวจสอบตอนนี้</div></div>
+    </div>
+
+    <div class="tab-panel" id="tab-done">
+      <div class="page-header"><div class="page-title">ตรวจแล้วทั้งหมด</div><div class="page-sub">รายการที่คุณยืนยันหรือตีกลับไปแล้ว</div></div>
+      <div class="card" style="padding:0;overflow:hidden;">
+        <table>
+          <thead><tr><th>นักเรียน</th><th>กิจกรรม</th><th>ผลตรวจ</th><th>วันที่ตรวจ</th></tr></thead>
+          <tbody id="doneBody"></tbody>
+        </table>
+      </div>
+      <div id="doneEmpty" class="empty-state" style="display:none;"><i data-lucide="inbox" style="width:36px;height:36px;margin-bottom:10px;"></i><div>ยังไม่มีประวัติการตรวจ</div></div>
+    </div>
+  </div>
+</div>
+
+<!-- Reject reason modal -->
+<div class="modal-overlay" id="rejectModal">
+  <div class="modal-box">
+    <h3>ระบุเหตุผลที่ตีกลับ</h3>
+    <textarea id="rejectReason" rows="3" style="width:100%;" placeholder="เช่น ไฟล์เกียรติบัตรไม่ชัดเจน กรุณาแนบใหม่"></textarea>
+    <div class="modal-actions">
+      <button class="btn-secondary" onclick="closeRejectModal()">ยกเลิก</button>
+      <button class="btn-reject" onclick="confirmReject()"><i data-lucide="rotate-ccw" style="width:14px;height:14px"></i>ยืนยันตีกลับ</button>
+    </div>
+  </div>
+</div>
+
+<script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-storage-compat.js"></script>
+<script src="shared/firebase-init.js"></script>
+<script src="shared/auth-guard.js"></script>
+<script src="shared/status-meta.js"></script>
+<script src="js/teacher-review.js"></script>
+</body>
+</html>

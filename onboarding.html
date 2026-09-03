@@ -1,0 +1,72 @@
+<!doctype html>
+<html lang="th">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>กรอกข้อมูลนักเรียน – NP-TCAS Verified</title>
+<link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<link href="shared/styles.css" rel="stylesheet">
+<script src="https://unpkg.com/lucide@1.24.0"></script>
+<style>.onboard-wrap{max-width:760px;margin:0 auto;padding:32px 20px;}</style>
+</head>
+<body>
+
+<div id="loadingOverlay"><div class="spinner"></div><p style="color:var(--text2);font-size:14px;font-weight:700;">กำลังตรวจสอบสิทธิ์...</p></div>
+<div id="toast"></div>
+
+<div class="navbar blue"><div class="navbar-inner">
+  <div class="navbar-brand">
+    <div class="navbar-mark"><i data-lucide="badge-check" style="width:20px;height:20px"></i></div>
+    <div><div class="navbar-title">NP-TCAS Verified</div><div class="navbar-subtitle">โรงเรียนหนองกี่พิทยาคม</div></div>
+  </div>
+  <button class="navbar-logout" onclick="signOutUser()" title="ออกจากระบบ"><i data-lucide="log-out" style="width:16px;height:16px"></i></button>
+</div></div>
+
+<div class="onboard-wrap">
+  <div style="text-align:center;margin-bottom:22px;">
+    <div class="page-title" style="font-size:19px;">ก่อนเริ่มใช้งาน ขอข้อมูลนักเรียนก่อนนะครับ</div>
+    <div class="page-sub">กรอกครั้งเดียว ใช้ยืนยันตัวตนกับครูประจำกลุ่มสาระและครูแนะแนวทุกครั้งที่ส่งกิจกรรม</div>
+  </div>
+
+  <form id="onboardForm">
+    <div class="form-section">
+      <div class="form-section-title"><i data-lucide="id-card" style="width:18px;height:18px"></i>ข้อมูลส่วนตัวนักเรียน</div>
+      <div class="form-grid">
+        <div class="field">
+          <label>คำนำหน้าชื่อ <span class="req">*</span></label>
+          <select id="f_prefix" required>
+            <option value="">- เลือกคำนำหน้า -</option>
+            <option>เด็กชาย</option><option>เด็กหญิง</option><option>นาย</option><option>นางสาว</option>
+          </select>
+        </div>
+        <div class="field"><label>ชื่อ (ภาษาไทย) <span class="req">*</span></label><input id="f_firstName" required placeholder="เช่น สมชาย"></div>
+        <div class="field"><label>นามสกุล (ภาษาไทย) <span class="req">*</span></label><input id="f_lastName" required placeholder="เช่น ใจดี"></div>
+        <div class="field"><label>เลขบัตรประชาชน <span class="req">*</span></label><input id="f_nationalId" required maxlength="13" pattern="\d{13}" placeholder="เลขบัตรประชาชน 13 หลัก"></div>
+        <div class="field"><label>ระดับชั้น <span class="req">*</span></label><select id="f_level" required><option value="">- เลือกระดับชั้น -</option></select></div>
+        <div class="field"><label>ห้อง <span class="req">*</span></label><select id="f_room" required><option value="">- เลือกห้อง -</option></select></div>
+        <div class="field">
+          <label>กลุ่มการเรียน <span class="req">*</span></label>
+          <select id="f_track" required><option value="">- เลือกกลุ่มการเรียน -</option></select>
+          <div class="hint">ใช้กำหนดว่ากิจกรรมของคุณจะถูกส่งไปให้ครูกลุ่มสาระท่านใดตรวจก่อน</div>
+        </div>
+        <div class="field"><label>เลขประจำตัวนักเรียน</label><input id="f_studentId" placeholder="ไม่บังคับ"></div>
+      </div>
+    </div>
+
+    <div style="display:flex;justify-content:flex-end;">
+      <button type="submit" class="btn-primary" id="submitBtn" style="padding:11px 22px;font-size:14px;">
+        บันทึกและเข้าใช้งาน <i data-lucide="arrow-right" style="width:15px;height:15px"></i>
+      </button>
+    </div>
+  </form>
+</div>
+
+<script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-storage-compat.js"></script>
+<script src="shared/firebase-init.js"></script>
+<script src="shared/auth-guard.js"></script>
+<script src="js/onboarding.js"></script>
+</body>
+</html>

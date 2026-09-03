@@ -1,0 +1,71 @@
+<!doctype html>
+<html lang="th">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ส่งกิจกรรมใหม่ – NP-TCAS Verified</title>
+<link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<link href="shared/styles.css" rel="stylesheet">
+<script src="https://unpkg.com/lucide@1.24.0"></script>
+</head>
+<body>
+
+<div id="loadingOverlay"><div class="spinner"></div><p style="color:var(--text2);font-size:14px;font-weight:700;">กำลังตรวจสอบสิทธิ์...</p></div>
+<div id="toast"></div>
+
+<div class="navbar blue"><div class="navbar-inner">
+  <div class="navbar-brand">
+    <div class="navbar-mark"><i data-lucide="badge-check" style="width:20px;height:20px"></i></div>
+    <div><div class="navbar-title">NP-TCAS Verified</div><div class="navbar-subtitle">โรงเรียนหนองกี่พิทยาคม</div></div>
+  </div>
+  <div class="navbar-user"><span id="userLabel"></span><button class="navbar-logout" onclick="signOutUser()" title="ออกจากระบบ"><i data-lucide="log-out" style="width:16px;height:16px"></i></button></div>
+</div></div>
+
+<div class="shell">
+  <div class="sidebar">
+    <a class="sidebar-btn" href="student-history.html"><i data-lucide="history" style="width:18px;height:18px"></i>ประวัติการส่ง</a>
+    <a class="sidebar-btn active" href="student-submit.html"><i data-lucide="plus-circle" style="width:18px;height:18px"></i>ส่งกิจกรรมใหม่</a>
+    <a class="sidebar-btn" href="onboarding.html"><i data-lucide="user-circle" style="width:18px;height:18px"></i>ข้อมูลส่วนตัว</a>
+  </div>
+  <div class="content" style="max-width:640px;">
+    <div class="page-header"><div class="page-title">ส่งกิจกรรมใหม่</div><div class="page-sub">แนบเกียรติบัตรหรือหลักฐานให้ครบ เพื่อให้ครูตรวจสอบได้เร็วขึ้น</div></div>
+
+    <form id="submitForm" class="form-section">
+      <div class="form-grid">
+        <div class="field full"><label>ชื่อกิจกรรม <span class="req">*</span></label><input id="f_title" required placeholder="เช่น ค่ายอบรมผู้นำเยาวชนอาเซียน"></div>
+        <div class="field"><label>ประเภทกิจกรรม <span class="req">*</span></label><select id="f_type" required><option value="">- เลือกประเภท -</option></select></div>
+        <div class="field"><label>กลุ่มสาระที่เกี่ยวข้อง <span class="req">*</span></label>
+          <select id="f_department" required><option value="">- เลือกกลุ่มสาระ -</option></select>
+          <div class="hint">ใช้ส่งให้ครูประจำกลุ่มสาระนี้เป็นผู้ตรวจสอบ</div>
+        </div>
+        <div class="field"><label>วันที่จัดกิจกรรม <span class="req">*</span></label><input id="f_date" type="date" required></div>
+        <div class="field"><label>ปีการศึกษา <span class="req">*</span></label><select id="f_year" required></select></div>
+        <div class="field full">
+          <label>ไฟล์เกียรติบัตร / หลักฐาน <span class="req">*</span></label>
+          <label class="upload-box" id="uploadBox" for="f_file">
+            <i data-lucide="upload-cloud" style="width:22px;height:22px;margin-bottom:6px;"></i>
+            <div id="uploadLabel">คลิกเพื่อเลือกไฟล์ (PDF หรือรูปภาพ ไม่เกิน 10MB)</div>
+          </label>
+          <input id="f_file" type="file" accept=".pdf,image/*" required style="display:none;">
+        </div>
+      </div>
+    </form>
+
+    <div style="display:flex;justify-content:flex-end;gap:10px;margin-top:16px;">
+      <a class="btn-secondary" href="student-history.html">ยกเลิก</a>
+      <button type="submit" form="submitForm" class="btn-primary" id="submitBtn" style="padding:11px 22px;font-size:14px;">
+        <i data-lucide="send" style="width:15px;height:15px"></i>ส่งกิจกรรม
+      </button>
+    </div>
+  </div>
+</div>
+
+<script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-storage-compat.js"></script>
+<script src="shared/firebase-init.js"></script>
+<script src="shared/auth-guard.js"></script>
+<script src="js/student-submit.js"></script>
+</body>
+</html>

@@ -1,0 +1,64 @@
+<!doctype html>
+<html lang="th">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ประวัติการส่งกิจกรรม – NP-TCAS Verified</title>
+<link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<link href="shared/styles.css" rel="stylesheet">
+<script src="https://unpkg.com/lucide@1.24.0"></script>
+</head>
+<body>
+
+<div id="loadingOverlay"><div class="spinner"></div><p style="color:var(--text2);font-size:14px;font-weight:700;">กำลังตรวจสอบสิทธิ์...</p></div>
+<div id="toast"></div>
+
+<div class="navbar blue"><div class="navbar-inner">
+  <div class="navbar-brand">
+    <div class="navbar-mark"><i data-lucide="badge-check" style="width:20px;height:20px"></i></div>
+    <div><div class="navbar-title">NP-TCAS Verified</div><div class="navbar-subtitle">โรงเรียนหนองกี่พิทยาคม</div></div>
+  </div>
+  <div class="navbar-user"><span id="userLabel"></span><button class="navbar-logout" onclick="signOutUser()" title="ออกจากระบบ"><i data-lucide="log-out" style="width:16px;height:16px"></i></button></div>
+</div></div>
+
+<div class="shell">
+  <div class="sidebar">
+    <a class="sidebar-btn active" href="student-history.html"><i data-lucide="history" style="width:18px;height:18px"></i>ประวัติการส่ง</a>
+    <a class="sidebar-btn" href="student-submit.html"><i data-lucide="plus-circle" style="width:18px;height:18px"></i>ส่งกิจกรรมใหม่</a>
+    <a class="sidebar-btn" href="onboarding.html"><i data-lucide="user-circle" style="width:18px;height:18px"></i>ข้อมูลส่วนตัว</a>
+  </div>
+  <div class="content">
+    <div class="page-header" style="display:flex;justify-content:space-between;align-items:flex-end;flex-wrap:wrap;gap:10px;">
+      <div><div class="page-title">ประวัติการส่งกิจกรรม</div><div class="page-sub">ดูสถานะการตรวจสอบย้อนหลังได้ทุกปีการศึกษา</div></div>
+      <a class="btn-primary" href="student-submit.html"><i data-lucide="plus" style="width:15px;height:15px"></i>ส่งกิจกรรมใหม่</a>
+    </div>
+
+    <div style="display:flex;gap:10px;margin-bottom:16px;">
+      <select id="yearFilter"></select>
+      <select id="statusFilter">
+        <option value="">ทุกสถานะ</option>
+        <option value="submitted">รอครูกลุ่มสาระตรวจ</option>
+        <option value="dept_confirmed">รอครูแนะแนวยืนยัน</option>
+        <option value="guidance_confirmed">ยืนยันสมบูรณ์</option>
+        <option value="revision">ตีกลับ ต้องแก้ไข</option>
+      </select>
+    </div>
+
+    <div id="list" style="display:flex;flex-direction:column;gap:12px;"></div>
+    <div id="emptyState" class="empty-state" style="display:none;">
+      <i data-lucide="inbox" style="width:36px;height:36px;margin-bottom:10px;"></i>
+      <div>ยังไม่มีรายการในเงื่อนไขที่เลือก</div>
+    </div>
+  </div>
+</div>
+
+<script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-storage-compat.js"></script>
+<script src="shared/firebase-init.js"></script>
+<script src="shared/auth-guard.js"></script>
+<script src="shared/status-meta.js"></script>
+<script src="js/student-history.js"></script>
+</body>
+</html>
