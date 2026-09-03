@@ -16,6 +16,7 @@ const DEFAULT_ACADEMIC = {
 guardPage(["admin"], (ctx) => {
   document.getElementById("userLabel").textContent = ctx.user.email;
   renderAdminViewSwitch("admin.html");
+  loadStaff();
   loadDeptTeachers();
   loadGuidanceTeachers();
   loadAcademic();
@@ -156,4 +157,271 @@ async function saveLists() {
 
 function linesToArray(text) {
   return text.split("\n").map((l) => l.trim()).filter(Boolean);
+}
+
+/* ── บุคลากร ── */
+let staffCache = [];
+
+async function loadStaff() {
+  try {
+    const snap = await db.collection("staff").orderBy("name").get();
+    staffCache = snap.docs.map((doc) => ({ id: doc.id, ...doc.data() }));
+  } catch (err) {
+    console.error(err);
+    // เผื่อยังไม่เคยมีข้อมูล/ยังไม่ได้สร้าง index ให้ orderBy — ลองดึงแบบไม่เรียงแทน
+    const snap = await db.collection("staff").get();
+    staffCache = snap.docs.map((doc) => ({ id: doc.id, ...doc.data() })).sort((a, b) => (a.name || "").localeCompare(b.name || "", "th"));
+  }
+  populateStaffFilters();
+  renderStaffTable();
+}
+
+function populateStaffFilters() {
+  const depts = [...new Set(staffCache.map((s) => s.department).filter(Boolean))].sort((a, b) => a.localeCompare(b, "th"));
+  const positions = [...new Set(staffCache.map((s) => s.position).filter(Boolean))].sort((a, b) => a.localeCompare(b, "th"));
+
+  const deptFilter = document.getElementById("staffDeptFilter");
+  const current = deptFilter.value;
+  deptFilter.innerHTML = '<option value="">ทุกกลุ่มงาน</option>' + depts.map((d) => `<option value="${escapeHtml(d)}">${escapeHtml(d)}</option>`).join("");
+  if (depts.includes(current)) deptFilter.value = current;
+
+  document.getElementById("staffDeptList").innerHTML = depts.map((d) => `<option value="${escapeHtml(d)}">`).join("");
+  document.getElementById("staffPositionList").innerHTML = positions.map((p) => `<option value="${escapeHtml(p)}">`).join("");
+}
+
+function renderStaffTable() {
+  const q = (document.getElementById("staffSearch").value || "").trim().toLowerCase();
+  const dept = document.getElementById("staffDeptFilter").value;
+  const filtered = staffCache.filter((s) => {
+    if (dept && s.department !== dept) return false;
+    if (!q) return true;
+    return [s.name, s.email, s.subject, s.position].some((v) => (v || "").toLowerCase().includes(q));
+  });
+
+  const countEl = document.getElementById("staffCount");
+  countEl.textContent = staffCache.length ? `(${filtered.length}${filtered.length !== staffCache.length ? " / " + staffCache.length : ""} คน)` : "";
+
+  const body = document.getElementById("staffBody");
+  if (!filtered.length) {
+    body.innerHTML = `<tr><td colspan="8"><div class="empty-state"><i data-lucide="id-card" style="width:30px;height:30px"></i><p style="margin-top:8px;">${staffCache.length ? "ไม่พบรายการที่ตรงกับการค้นหา" : "ยังไม่มีข้อมูลบุคลากร — เพิ่มทีละคนหรือนำเข้าจากไฟล์ CSV"}</p></div></td></tr>`;
+    lucide.createIcons();
+    return;
+  }
+
+  body.innerHTML = filtered.map((s) => `
+    <tr>
+      <td>${escapeHtml(s.name)}</td>
+      <td>${escapeHtml(s.position || "-")}</td>
+      <td>${escapeHtml(s.department || "-")}</td>
+      <td>${escapeHtml(s.email)}</td>
+      <td>${escapeHtml(s.phone || "-")}</td>
+      <td>${escapeHtml(s.subject || "-")}</td>
+      <td>${escapeHtml(s.note || "-")}</td>
+      <td style="white-space:nowrap;">
+        <button class="icon-btn" onclick="openStaffModal('${escapeAttr(s.id)}')" title="แก้ไข"><i data-lucide="pencil" style="width:15px;height:15px"></i></button>
+        <button class="icon-btn" onclick="deleteStaff('${escapeAttr(s.id)}')" title="ลบ"><i data-lucide="trash-2" style="width:15px;height:15px"></i></button>
+      </td>
+    </tr>
+  `).join("");
+  lucide.createIcons();
+}
+
+document.getElementById("staffSearch").addEventListener("input", renderStaffTable);
+document.getElementById("staffDeptFilter").addEventListener("change", renderStaffTable);
+document.getElementById("staffCsvInput").addEventListener("change", importStaffCsv);
+
+const STAFF_FORM_IDS = ["staffName", "staffPosition", "staffDept", "staffEmail", "staffPhone", "staffSubject", "staffNote"];
+
+function openStaffModal(id) {
+  const modal = document.getElementById("staffModal");
+  const emailInput = document.getElementById("staffEmail");
+  if (id) {
+    const s = staffCache.find((x) => x.id === id);
+    if (!s) return;
+    document.getElementById("staffModalTitle").textContent = "แก้ไขบุคลากร";
+    document.getElementById("staffName").value = s.name || "";
+    document.getElementById("staffPosition").value = s.position || "";
+    document.getElementById("staffDept").value = s.department || "";
+    emailInput.value = s.email || "";
+    document.getElementById("staffPhone").value = s.phone || "";
+    document.getElementById("staffSubject").value = s.subject || "";
+    document.getElementById("staffNote").value = s.note || "";
+    emailInput.readOnly = true;
+    document.getElementById("staffEmailHint").style.display = "block";
+    modal.dataset.editingId = id;
+  } else {
+    STAFF_FORM_IDS.forEach((fid) => (document.getElementById(fid).value = ""));
+    document.getElementById("staffModalTitle").textContent = "เพิ่มบุคลากร";
+    emailInput.readOnly = false;
+    document.getElementById("staffEmailHint").style.display = "none";
+    delete modal.dataset.editingId;
+  }
+  modal.classList.add("open");
+}
+
+function closeStaffModal() {
+  document.getElementById("staffModal").classList.remove("open");
+}
+
+async function saveStaffModal() {
+  const name = document.getElementById("staffName").value.trim();
+  const email = document.getElementById("staffEmail").value.trim().toLowerCase();
+  const position = document.getElementById("staffPosition").value.trim();
+  const department = document.getElementById("staffDept").value.trim();
+  const phone = document.getElementById("staffPhone").value.trim();
+  const subject = document.getElementById("staffSubject").value.trim();
+  const note = document.getElementById("staffNote").value.trim();
+
+  if (!name) return showToast("กรุณากรอกชื่อ-นามสกุล", "error");
+  if (!validEmail(email)) return showToast("กรุณากรอกอีเมล @" + ALLOWED_DOMAIN + " ให้ถูกต้อง", "error");
+
+  const btn = document.getElementById("staffSaveBtn");
+  btn.disabled = true;
+  try {
+    await db.collection("staff").doc(email).set({
+      name, position, department, email, phone, subject, note,
+      updatedAt: firebase.firestore.FieldValue.serverTimestamp(),
+    }, { merge: true });
+    showToast("บันทึกแล้ว", "success");
+    closeStaffModal();
+    loadStaff();
+  } catch (err) {
+    console.error(err);
+    showToast("บันทึกไม่สำเร็จ", "error");
+  } finally {
+    btn.disabled = false;
+  }
+}
+
+async function deleteStaff(id) {
+  const s = staffCache.find((x) => x.id === id);
+  if (!confirm(`ลบข้อมูลของ ${s ? s.name : id} ใช่หรือไม่?`)) return;
+  try {
+    await db.collection("staff").doc(id).delete();
+    showToast("ลบแล้ว", "success");
+    loadStaff();
+  } catch (err) {
+    console.error(err);
+    showToast("ลบไม่สำเร็จ", "error");
+  }
+}
+
+/* นำเข้า/ส่งออก CSV — หัวคอลัมน์ต้องเป็นภาษาไทยตามฟอร์แมตนี้ (ลำดับคอลัมน์สลับกันได้):
+   ชื่อ-นามสกุล, ตำแหน่ง, กลุ่มงาน, อีเมล, เบอร์โทร, วิชาที่สอน, หมายเหตุ */
+const STAFF_CSV_COLUMNS = { name: "ชื่อ-นามสกุล", position: "ตำแหน่ง", department: "กลุ่มงาน", email: "อีเมล", phone: "เบอร์โทร", subject: "วิชาที่สอน", note: "หมายเหตุ" };
+
+async function importStaffCsv(event) {
+  const file = event.target.files[0];
+  event.target.value = "";
+  if (!file) return;
+
+  const text = await file.text();
+  const rows = parseCsv(text);
+  if (rows.length < 2) return showToast("ไฟล์ไม่มีข้อมูล หรืออ่านไม่ได้", "error");
+
+  const header = rows[0].map((h) => h.trim());
+  const idx = {};
+  for (const key in STAFF_CSV_COLUMNS) idx[key] = header.indexOf(STAFF_CSV_COLUMNS[key]);
+  if (idx.name === -1 || idx.email === -1) {
+    return showToast("ไฟล์ CSV ต้องมีคอลัมน์ 'ชื่อ-นามสกุล' และ 'อีเมล' อย่างน้อย", "error");
+  }
+
+  const dataRows = rows.slice(1);
+  const validRows = [];
+  let skipped = 0;
+  dataRows.forEach((r) => {
+    const email = (r[idx.email] || "").trim().toLowerCase();
+    const name = (r[idx.name] || "").trim();
+    if (!email || !name) { skipped++; return; }
+    validRows.push({
+      name,
+      position: idx.position > -1 ? (r[idx.position] || "").trim() : "",
+      department: idx.department > -1 ? (r[idx.department] || "").trim() : "",
+      email,
+      phone: idx.phone > -1 ? (r[idx.phone] || "").trim() : "",
+      subject: idx.subject > -1 ? (r[idx.subject] || "").trim() : "",
+      note: idx.note > -1 ? (r[idx.note] || "").trim() : "",
+    });
+  });
+
+  if (!validRows.length) return showToast("ไม่พบแถวข้อมูลที่ใช้ได้ในไฟล์", "error");
+
+  try {
+    const CHUNK = 400; // เผื่อ margin จากลิมิต batch write 500 รายการของ Firestore
+    for (let i = 0; i < validRows.length; i += CHUNK) {
+      const batch = db.batch();
+      validRows.slice(i, i + CHUNK).forEach((data) => {
+        batch.set(db.collection("staff").doc(data.email), { ...data, updatedAt: firebase.firestore.FieldValue.serverTimestamp() }, { merge: true });
+      });
+      await batch.commit();
+    }
+    showToast(`นำเข้าสำเร็จ ${validRows.length} รายการ${skipped ? ` (ข้าม ${skipped} แถวที่ไม่มีชื่อ/อีเมล)` : ""}`, "success");
+    loadStaff();
+  } catch (err) {
+    console.error(err);
+    showToast("นำเข้าไม่สำเร็จ", "error");
+  }
+}
+
+function exportStaffCsv() {
+  if (!staffCache.length) return showToast("ไม่มีข้อมูลให้ส่งออก", "error");
+  const header = Object.values(STAFF_CSV_COLUMNS);
+  const rows = staffCache.map((s) => [s.name, s.position, s.department, s.email, s.phone, s.subject, s.note]);
+  downloadCsv(`np-tcas-verified-บุคลากร-${new Date().toISOString().slice(0, 10)}.csv`, [header, ...rows]);
+}
+
+/** แปลงข้อความ CSV เป็น array ของแถว รองรับฟิลด์ที่ครอบด้วย " " (มีจุลภาค/ขึ้นบรรทัดใหม่ในฟิลด์ได้) */
+function parseCsv(text) {
+  if (text.charCodeAt(0) === 0xfeff) text = text.slice(1); // ตัด BOM ถ้ามี
+  const rows = [];
+  let row = [], field = "", inQuotes = false;
+  for (let i = 0; i < text.length; i++) {
+    const c = text[i];
+    if (inQuotes) {
+      if (c === '"') {
+        if (text[i + 1] === '"') { field += '"'; i++; }
+        else inQuotes = false;
+      } else field += c;
+    } else if (c === '"') {
+      inQuotes = true;
+    } else if (c === ",") {
+      row.push(field); field = "";
+    } else if (c === "\r") {
+      // ข้าม — จัดการตอนเจอ \n
+    } else if (c === "\n") {
+      row.push(field); rows.push(row); row = []; field = "";
+    } else {
+      field += c;
+    }
+  }
+  if (field.length || row.length) { row.push(field); rows.push(row); }
+  return rows.filter((r) => r.some((v) => v.trim() !== ""));
+}
+
+function downloadCsv(filename, rows) {
+  const csv = "\uFEFF" + rows.map((r) => r.map(csvEscape).join(",")).join("\r\n");
+  const blob = new Blob([csv], { type: "text/csv;charset=utf-8;" });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = filename;
+  document.body.appendChild(a);
+  a.click();
+  a.remove();
+  URL.revokeObjectURL(url);
+}
+
+function csvEscape(val) {
+  const s = String(val ?? "");
+  return /[",\n]/.test(s) ? `"${s.replace(/"/g, '""')}"` : s;
+}
+
+function escapeHtml(str) {
+  const div = document.createElement("div");
+  div.textContent = str ?? "";
+  return div.innerHTML;
+}
+
+function escapeAttr(str) {
+  return String(str ?? "").replace(/'/g, "\\'");
 }

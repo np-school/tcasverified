@@ -24,14 +24,31 @@
 
 <div class="shell">
   <div class="sidebar">
-    <button class="sidebar-btn active staff" data-tab="dept"><i data-lucide="users" style="width:18px;height:18px"></i>ครูประจำกลุ่มสาระ</button>
+    <button class="sidebar-btn active staff" data-tab="staff"><i data-lucide="id-card" style="width:18px;height:18px"></i>บุคลากร</button>
+    <button class="sidebar-btn" data-tab="dept"><i data-lucide="users" style="width:18px;height:18px"></i>ครูประจำกลุ่มสาระ</button>
     <button class="sidebar-btn" data-tab="guidance"><i data-lucide="user-check" style="width:18px;height:18px"></i>ครูแนะแนว</button>
     <button class="sidebar-btn" data-tab="academic"><i data-lucide="school" style="width:18px;height:18px"></i>ห้องเรียน/กลุ่มการเรียน</button>
     <button class="sidebar-btn" data-tab="lists"><i data-lucide="list-checks" style="width:18px;height:18px"></i>หัวข้อ/กลุ่มสาระ</button>
   </div>
   <div class="content">
 
-    <div class="tab-panel active" id="tab-dept">
+    <div class="tab-panel active" id="tab-staff">
+      <div class="page-header"><div class="page-title">บุคลากร <span id="staffCount" style="font-size:13px;font-weight:700;color:var(--text3);"></span></div><div class="page-sub">ทำเนียบครูและบุคลากรทั้งหมดของโรงเรียน — เพิ่มทีละคน หรือนำเข้า/อัปเดตจากไฟล์ CSV</div></div>
+      <div class="add-row" style="align-items:center;">
+        <input id="staffSearch" placeholder="ค้นหาชื่อ / อีเมล / วิชาที่สอน" style="flex:2;min-width:220px;">
+        <select id="staffDeptFilter" style="flex:1;min-width:160px;"><option value="">ทุกกลุ่มงาน</option></select>
+        <button class="btn-secondary" onclick="document.getElementById('staffCsvInput').click()"><i data-lucide="upload-cloud" style="width:15px;height:15px"></i>นำเข้า CSV</button>
+        <input type="file" id="staffCsvInput" accept=".csv" style="display:none">
+        <button class="btn-secondary" onclick="exportStaffCsv()"><i data-lucide="download" style="width:15px;height:15px"></i>ส่งออก CSV</button>
+        <button class="btn-primary" onclick="openStaffModal()"><i data-lucide="user-plus" style="width:15px;height:15px"></i>เพิ่มบุคลากร</button>
+      </div>
+      <div class="hint" style="display:block;margin:-10px 0 14px;">ไฟล์ CSV ต้องมีหัวคอลัมน์: <b>ชื่อ-นามสกุล, ตำแหน่ง, กลุ่มงาน, อีเมล, เบอร์โทร, วิชาที่สอน, หมายเหตุ</b> — แถวที่อีเมลตรงกับข้อมูลเดิม ระบบจะอัปเดตให้แทนการเพิ่มซ้ำ</div>
+      <div class="card" style="padding:0;overflow:hidden;">
+        <table><thead><tr><th>ชื่อ-นามสกุล</th><th>ตำแหน่ง</th><th>กลุ่มงาน</th><th>อีเมล</th><th>เบอร์โทร</th><th>วิชาที่สอน</th><th>หมายเหตุ</th><th></th></tr></thead><tbody id="staffBody"></tbody></table>
+      </div>
+    </div>
+
+    <div class="tab-panel" id="tab-dept">
       <div class="page-header"><div class="page-title">ครูประจำกลุ่มสาระ</div><div class="page-sub">เพิ่มสิทธิ์ตรวจสอบกิจกรรม โดยอ้างอิงจากอีเมล @nongki.ac.th</div></div>
       <div class="add-row">
         <input id="deptEmail" placeholder="อีเมล เช่น wipa.s@nongki.ac.th">
@@ -88,6 +105,28 @@
       <button class="btn-primary" onclick="saveLists()"><i data-lucide="save" style="width:15px;height:15px"></i>บันทึก</button>
     </div>
 
+  </div>
+</div>
+
+<div class="modal-overlay" id="staffModal">
+  <div class="modal-box wide">
+    <h3 id="staffModalTitle">เพิ่มบุคลากร</h3>
+    <div class="form-grid">
+      <div class="field"><label>ชื่อ-นามสกุล <span class="req">*</span></label><input id="staffName" placeholder="เช่น นางสาวสมหญิง ใจดี"></div>
+      <div class="field"><label>ตำแหน่ง</label><input id="staffPosition" list="staffPositionList" placeholder="เช่น ครู"></div>
+      <div class="field"><label>กลุ่มงาน</label><input id="staffDept" list="staffDeptList" placeholder="เช่น วิทยาศาสตร์"></div>
+      <div class="field"><label>อีเมล <span class="req">*</span></label><input id="staffEmail" placeholder="ชื่อ@nongki.ac.th"></div>
+      <div class="field"><label>เบอร์โทร</label><input id="staffPhone" placeholder="0812345678"></div>
+      <div class="field"><label>วิชาที่สอน</label><input id="staffSubject"></div>
+      <div class="field full"><label>หมายเหตุ</label><input id="staffNote"></div>
+    </div>
+    <datalist id="staffPositionList"></datalist>
+    <datalist id="staffDeptList"></datalist>
+    <p class="hint" id="staffEmailHint" style="margin-top:4px;display:none;">อีเมลใช้เป็นรหัสอ้างอิงของรายการนี้ แก้ไขไม่ได้หลังบันทึก — ถ้าพิมพ์ผิดให้ลบแล้วเพิ่มใหม่</p>
+    <div class="modal-actions">
+      <button class="btn-secondary" onclick="closeStaffModal()">ยกเลิก</button>
+      <button class="btn-primary" id="staffSaveBtn" onclick="saveStaffModal()"><i data-lucide="save" style="width:15px;height:15px"></i>บันทึก</button>
+    </div>
   </div>
 </div>
 

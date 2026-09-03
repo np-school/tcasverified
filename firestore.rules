@@ -59,5 +59,11 @@ service cloud.firestore {
       allow read: if isSchoolAccount();
       allow write: if isAdmin();
     }
+
+    // staff/{email} — ทำเนียบบุคลากร (ครู/ผู้บริหาร/เจ้าหน้าที่) จัดการโดยแอดมินในหน้า admin.html
+    match /staff/{email} {
+      allow read: if isSchoolAccount();
+      allow write: if isAdmin();
+    }
   }
 }
