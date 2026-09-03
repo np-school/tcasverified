@@ -43,13 +43,13 @@
         <button class="btn-primary" onclick="openStaffModal()"><i data-lucide="user-plus" style="width:15px;height:15px"></i>เพิ่มบุคลากร</button>
       </div>
       <div class="hint" style="display:block;margin:-10px 0 14px;">ไฟล์ CSV ต้องมีหัวคอลัมน์: <b>ชื่อ-นามสกุล, ตำแหน่ง, กลุ่มงาน, อีเมล, เบอร์โทร, วิชาที่สอน, หมายเหตุ</b> — แถวที่อีเมลตรงกับข้อมูลเดิม ระบบจะอัปเดตให้แทนการเพิ่มซ้ำ</div>
-      <div class="card" style="padding:0;overflow:hidden;">
-        <table><thead><tr><th>ชื่อ-นามสกุล</th><th>ตำแหน่ง</th><th>กลุ่มงาน</th><th>อีเมล</th><th>เบอร์โทร</th><th>วิชาที่สอน</th><th>หมายเหตุ</th><th></th></tr></thead><tbody id="staffBody"></tbody></table>
+      <div class="card" style="padding:0;overflow-x:auto;">
+        <table><thead><tr><th>ชื่อ-นามสกุล</th><th>ตำแหน่ง</th><th>กลุ่มงาน</th><th>อีเมล</th><th>เบอร์โทร</th><th>วิชาที่สอน</th><th>หมายเหตุ</th><th>สิทธิ์การใช้งาน</th><th></th></tr></thead><tbody id="staffBody"></tbody></table>
       </div>
     </div>
 
     <div class="tab-panel" id="tab-dept">
-      <div class="page-header"><div class="page-title">ครูประจำกลุ่มสาระ</div><div class="page-sub">เพิ่มสิทธิ์ตรวจสอบกิจกรรม โดยอ้างอิงจากอีเมล @nongki.ac.th</div></div>
+      <div class="page-header"><div class="page-title">ครูประจำกลุ่มสาระ</div><div class="page-sub">เพิ่มสิทธิ์ตรวจสอบกิจกรรม โดยอ้างอิงจากอีเมล @nongki.ac.th — หรือจะตั้งสิทธิ์จากแท็บ "บุคลากร" โดยตรงก็ได้</div></div>
       <div class="add-row">
         <input id="deptEmail" placeholder="อีเมล เช่น wipa.s@nongki.ac.th">
         <select id="deptDept"></select>
@@ -61,7 +61,7 @@
     </div>
 
     <div class="tab-panel" id="tab-guidance">
-      <div class="page-header"><div class="page-title">ครูแนะแนว</div><div class="page-sub">เพิ่มสิทธิ์ยืนยันขั้นสุดท้ายและส่งออกข้อมูล</div></div>
+      <div class="page-header"><div class="page-title">ครูแนะแนว</div><div class="page-sub">เพิ่มสิทธิ์ยืนยันขั้นสุดท้ายและส่งออกข้อมูล — หรือจะตั้งสิทธิ์จากแท็บ "บุคลากร" โดยตรงก็ได้</div></div>
       <div class="add-row">
         <input id="guidanceEmail" placeholder="อีเมล เช่น arunee.n@nongki.ac.th">
         <button class="btn-primary" onclick="addGuidanceTeacher()"><i data-lucide="user-plus" style="width:15px;height:15px"></i>เพิ่ม</button>
@@ -126,6 +126,30 @@
     <div class="modal-actions">
       <button class="btn-secondary" onclick="closeStaffModal()">ยกเลิก</button>
       <button class="btn-primary" id="staffSaveBtn" onclick="saveStaffModal()"><i data-lucide="save" style="width:15px;height:15px"></i>บันทึก</button>
+    </div>
+  </div>
+</div>
+
+<div class="modal-overlay" id="roleModal">
+  <div class="modal-box">
+    <h3>ตั้งสิทธิ์การใช้งาน</h3>
+    <p class="hint" id="roleModalWho" style="margin-bottom:16px;"></p>
+    <div class="field" style="margin-bottom:14px;">
+      <label>สิทธิ์</label>
+      <select id="roleSelect">
+        <option value="">ไม่มีสิทธิ์พิเศษ (เข้าระบบแบบนักเรียน)</option>
+        <option value="dept_teacher">ครูประจำกลุ่มสาระ — ตรวจ/ยืนยันกิจกรรมของกลุ่มสาระตัวเอง</option>
+        <option value="guidance">ครูแนะแนว — ยืนยันขั้นสุดท้าย + ส่งออกข้อมูล</option>
+        <option value="admin">แอดมิน — ดูแลระบบทั้งหมด</option>
+      </select>
+    </div>
+    <div class="field" id="roleDeptField" style="display:none;">
+      <label>กลุ่มสาระที่ดูแล</label>
+      <select id="roleDeptSelect"></select>
+    </div>
+    <div class="modal-actions">
+      <button class="btn-secondary" onclick="closeRoleModal()">ยกเลิก</button>
+      <button class="btn-primary" id="roleSaveBtn" onclick="saveRoleModal()"><i data-lucide="save" style="width:15px;height:15px"></i>บันทึก</button>
     </div>
   </div>
 </div>

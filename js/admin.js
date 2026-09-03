@@ -64,6 +64,7 @@ async function addDeptTeacher() {
     document.getElementById("deptEmail").value = "";
     showToast("เพิ่มครูประจำกลุ่มสาระแล้ว", "success");
     loadDeptTeachers();
+    refreshStaffRoles();
   } catch (err) { console.error(err); showToast("เพิ่มไม่สำเร็จ", "error"); }
 }
 
@@ -92,6 +93,7 @@ async function addGuidanceTeacher() {
     document.getElementById("guidanceEmail").value = "";
     showToast("เพิ่มครูแนะแนวแล้ว", "success");
     loadGuidanceTeachers();
+    refreshStaffRoles();
   } catch (err) { console.error(err); showToast("เพิ่มไม่สำเร็จ", "error"); }
 }
 
@@ -101,6 +103,7 @@ async function removePermission(email, reload) {
     await db.collection("permissions").doc(email).delete();
     showToast("ยกเลิกสิทธิ์แล้ว", "success");
     reload();
+    refreshStaffRoles();
   } catch (err) { console.error(err); showToast("ยกเลิกไม่สำเร็จ", "error"); }
 }
 
@@ -161,6 +164,7 @@ function linesToArray(text) {
 
 /* ── บุคลากร ── */
 let staffCache = [];
+let permissionsMap = {}; // email -> { role, department? } จาก collection permissions ใช้แสดง badge สิทธิ์ในตารางบุคลากร
 
 async function loadStaff() {
   try {
@@ -172,8 +176,31 @@ async function loadStaff() {
     const snap = await db.collection("staff").get();
     staffCache = snap.docs.map((doc) => ({ id: doc.id, ...doc.data() })).sort((a, b) => (a.name || "").localeCompare(b.name || "", "th"));
   }
+  await loadPermissionsMap();
   populateStaffFilters();
   renderStaffTable();
+}
+
+/** ดึง permissions ทั้งหมดมาเก็บเป็น map สำหรับแสดง badge สิทธิ์ในตารางบุคลากร */
+async function loadPermissionsMap() {
+  const snap = await db.collection("permissions").get();
+  permissionsMap = {};
+  snap.forEach((doc) => (permissionsMap[doc.id] = doc.data()));
+}
+
+/** เรียกหลังแก้สิทธิ์จากแท็บครูกลุ่มสาระ/ครูแนะแนว เพื่อให้ badge ในตารางบุคลากรอัปเดตตาม โดยไม่ต้องโหลดข้อมูลบุคลากรใหม่ทั้งหมด */
+async function refreshStaffRoles() {
+  await loadPermissionsMap();
+  renderStaffTable();
+}
+
+function roleBadge(email) {
+  const perm = permissionsMap[email];
+  if (!perm) return `<span class="role-tag none">ไม่มีสิทธิ์พิเศษ</span>`;
+  if (perm.role === "dept_teacher") return `<span class="role-tag dept">ครูกลุ่มสาระ${perm.department ? " · " + escapeHtml(perm.department) : ""}</span>`;
+  if (perm.role === "guidance") return `<span class="role-tag guidance">ครูแนะแนว</span>`;
+  if (perm.role === "admin") return `<span class="role-tag admin">แอดมิน</span>`;
+  return `<span class="role-tag none">${escapeHtml(perm.role)}</span>`;
 }
 
 function populateStaffFilters() {
@@ -203,7 +230,7 @@ function renderStaffTable() {
 
   const body = document.getElementById("staffBody");
   if (!filtered.length) {
-    body.innerHTML = `<tr><td colspan="8"><div class="empty-state"><i data-lucide="id-card" style="width:30px;height:30px"></i><p style="margin-top:8px;">${staffCache.length ? "ไม่พบรายการที่ตรงกับการค้นหา" : "ยังไม่มีข้อมูลบุคลากร — เพิ่มทีละคนหรือนำเข้าจากไฟล์ CSV"}</p></div></td></tr>`;
+    body.innerHTML = `<tr><td colspan="9"><div class="empty-state"><i data-lucide="id-card" style="width:30px;height:30px"></i><p style="margin-top:8px;">${staffCache.length ? "ไม่พบรายการที่ตรงกับการค้นหา" : "ยังไม่มีข้อมูลบุคลากร — เพิ่มทีละคนหรือนำเข้าจากไฟล์ CSV"}</p></div></td></tr>`;
     lucide.createIcons();
     return;
   }
@@ -217,7 +244,9 @@ function renderStaffTable() {
       <td>${escapeHtml(s.phone || "-")}</td>
       <td>${escapeHtml(s.subject || "-")}</td>
       <td>${escapeHtml(s.note || "-")}</td>
+      <td>${roleBadge(s.email)}</td>
       <td style="white-space:nowrap;">
+        <button class="icon-btn" onclick="openRoleModal('${escapeAttr(s.email)}')" title="ตั้งสิทธิ์"><i data-lucide="shield" style="width:15px;height:15px"></i></button>
         <button class="icon-btn" onclick="openStaffModal('${escapeAttr(s.id)}')" title="แก้ไข"><i data-lucide="pencil" style="width:15px;height:15px"></i></button>
         <button class="icon-btn" onclick="deleteStaff('${escapeAttr(s.id)}')" title="ลบ"><i data-lucide="trash-2" style="width:15px;height:15px"></i></button>
       </td>
@@ -303,6 +332,71 @@ async function deleteStaff(id) {
   } catch (err) {
     console.error(err);
     showToast("ลบไม่สำเร็จ", "error");
+  }
+}
+
+/* ── ตั้งสิทธิ์การใช้งาน (permissions) จากหน้าบุคลากรโดยตรง ── */
+let roleModalEmail = null;
+
+async function openRoleModal(email) {
+  const s = staffCache.find((x) => x.email === email);
+  if (!s) return;
+  roleModalEmail = email;
+  document.getElementById("roleModalWho").textContent = `${s.name} — ${email}`;
+
+  await populateRoleDeptSelect();
+
+  const perm = permissionsMap[email];
+  document.getElementById("roleSelect").value = perm ? perm.role : "";
+  document.getElementById("roleDeptSelect").value = (perm && perm.department) || s.department || "";
+  toggleRoleDeptField();
+
+  document.getElementById("roleModal").classList.add("open");
+}
+
+async function populateRoleDeptSelect() {
+  const deptSnap = await db.collection("settings").doc("departments").get();
+  const departments = (deptSnap.exists && deptSnap.data().departments) || DEFAULT_DEPARTMENTS;
+  document.getElementById("roleDeptSelect").innerHTML = departments.map((d) => `<option>${escapeHtml(d)}</option>`).join("");
+}
+
+function toggleRoleDeptField() {
+  const show = document.getElementById("roleSelect").value === "dept_teacher";
+  document.getElementById("roleDeptField").style.display = show ? "block" : "none";
+}
+document.getElementById("roleSelect").addEventListener("change", toggleRoleDeptField);
+
+function closeRoleModal() {
+  document.getElementById("roleModal").classList.remove("open");
+  roleModalEmail = null;
+}
+
+async function saveRoleModal() {
+  const email = roleModalEmail;
+  if (!email) return;
+  const role = document.getElementById("roleSelect").value;
+
+  const btn = document.getElementById("roleSaveBtn");
+  btn.disabled = true;
+  try {
+    if (!role) {
+      await db.collection("permissions").doc(email).delete();
+      showToast("ยกเลิกสิทธิ์พิเศษแล้ว", "success");
+    } else {
+      const data = { role, addedAt: firebase.firestore.FieldValue.serverTimestamp() };
+      if (role === "dept_teacher") data.department = document.getElementById("roleDeptSelect").value;
+      await db.collection("permissions").doc(email).set(data);
+      showToast("ตั้งสิทธิ์แล้ว", "success");
+    }
+    closeRoleModal();
+    refreshStaffRoles();
+    loadDeptTeachers();
+    loadGuidanceTeachers();
+  } catch (err) {
+    console.error(err);
+    showToast("ตั้งสิทธิ์ไม่สำเร็จ", "error");
+  } finally {
+    btn.disabled = false;
   }
 }
 
