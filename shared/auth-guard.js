@@ -104,21 +104,20 @@ function guardPage(allowedRoles, onReady) {
 }
 
 /** เปิด/ปิดเมนูผู้ใช้แบบ dropdown บนมือถือ (ปุ่มแฮมเบอร์เกอร์ #navMenuBtn + กล่อง #navbarUser)
- *  ทำงานอัตโนมัติทุกหน้าที่โหลด auth-guard.js ถ้าไม่มี element พวกนี้ก็แค่ไม่ทำอะไร */
-document.addEventListener("DOMContentLoaded", () => {
-  const menuBtn = document.getElementById("navMenuBtn");
-  const userPanel = document.getElementById("navbarUser");
-  if (!menuBtn || !userPanel) return;
-
-  menuBtn.addEventListener("click", (e) => {
-    e.stopPropagation();
-    userPanel.classList.toggle("open");
-  });
-  document.addEventListener("click", (e) => {
-    if (userPanel.classList.contains("open") && !userPanel.contains(e.target) && !menuBtn.contains(e.target)) {
-      userPanel.classList.remove("open");
-    }
-  });
+ *  เรียกตรงๆ ผ่าน onclick ในหน้า HTML (ไม่ใช้ DOMContentLoaded/addEventListener เพราะบางเบราว์เซอร์/
+ *  ลำดับโหลดสคริปต์ทำให้ event ผูกไม่ทันหรือไม่ทำงาน) */
+function toggleNavMenu(e) {
+  if (e) e.stopPropagation();
+  const panel = document.getElementById("navbarUser");
+  if (panel) panel.classList.toggle("open");
+}
+document.addEventListener("click", (e) => {
+  const panel = document.getElementById("navbarUser");
+  const btn = document.getElementById("navMenuBtn");
+  if (!panel || !panel.classList.contains("open")) return;
+  if (panel.contains(e.target)) return;
+  if (btn && btn.contains(e.target)) return;
+  panel.classList.remove("open");
 });
 let toastTimer;
 function showToast(message, type = "default") {
