@@ -103,7 +103,23 @@ function guardPage(allowedRoles, onReady) {
   });
 }
 
-/** Toast แจ้งเตือนสั้นๆ มุมล่างจอ — ต้องมี <div id="toast"></div> ในหน้า */
+/** เปิด/ปิดเมนูผู้ใช้แบบ dropdown บนมือถือ (ปุ่มแฮมเบอร์เกอร์ #navMenuBtn + กล่อง #navbarUser)
+ *  ทำงานอัตโนมัติทุกหน้าที่โหลด auth-guard.js ถ้าไม่มี element พวกนี้ก็แค่ไม่ทำอะไร */
+document.addEventListener("DOMContentLoaded", () => {
+  const menuBtn = document.getElementById("navMenuBtn");
+  const userPanel = document.getElementById("navbarUser");
+  if (!menuBtn || !userPanel) return;
+
+  menuBtn.addEventListener("click", (e) => {
+    e.stopPropagation();
+    userPanel.classList.toggle("open");
+  });
+  document.addEventListener("click", (e) => {
+    if (userPanel.classList.contains("open") && !userPanel.contains(e.target) && !menuBtn.contains(e.target)) {
+      userPanel.classList.remove("open");
+    }
+  });
+});
 let toastTimer;
 function showToast(message, type = "default") {
   const el = document.getElementById("toast");
