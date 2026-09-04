@@ -19,8 +19,7 @@ guardPage(["admin"], (ctx) => {
   loadStaff();
   loadDeptTeachers();
   loadGuidanceTeachers();
-  loadAcademic();
-  loadLists();
+  loadReferenceData();
 });
 
 document.querySelectorAll(".sidebar-btn[data-tab]").forEach((btn) => {
@@ -111,45 +110,64 @@ function validEmail(email) {
   return email.endsWith("@" + ALLOWED_DOMAIN) && email.length > ("@" + ALLOWED_DOMAIN).length;
 }
 
-/* ── ห้องเรียน/กลุ่มการเรียน ── */
-async function loadAcademic() {
-  const snap = await db.collection("settings").doc("academic").get();
-  const data = snap.exists ? { ...DEFAULT_ACADEMIC, ...snap.data() } : DEFAULT_ACADEMIC;
-  document.getElementById("academicLevels").value = data.levels.join("\n");
-  document.getElementById("academicTracks").value = data.tracks.join("\n");
-  const roomLines = data.levels.map((lvl) => `${lvl} = ${(data.roomsPerLevel[lvl] || []).join(",")}`);
-  document.getElementById("academicRooms").value = roomLines.join("\n");
-}
+/* ── ข้อมูลอ้างอิง: ระดับชั้น / ห้องต่อระดับชั้น / กลุ่มการเรียน / ประเภทกิจกรรม / กลุ่มสาระ
+   รวมเป็นแท็บเดียว แก้ไขแบบ "แท็ก" (พิมพ์แล้ว Enter เพื่อเพิ่ม, กดกากบาทเพื่อลบ) แทน textarea ดิบ ── */
+let refLevelsEditor, refTracksEditor, refTypesEditor, refDeptsEditor;
+let refRoomsPerLevel = {}; // เก็บห้องของแต่ละระดับชั้นไว้ระหว่างแก้ไข (sync กับ chip editor ของแต่ละระดับ)
 
-async function saveAcademic() {
-  const levels = linesToArray(document.getElementById("academicLevels").value);
-  const tracks = linesToArray(document.getElementById("academicTracks").value);
-  const roomsPerLevel = {};
-  linesToArray(document.getElementById("academicRooms").value).forEach((line) => {
-    const [lvl, rooms] = line.split("=").map((s) => s.trim());
-    if (lvl) roomsPerLevel[lvl] = (rooms || "").split(",").map((r) => r.trim()).filter(Boolean);
-  });
-  try {
-    await db.collection("settings").doc("academic").set({ levels, tracks, roomsPerLevel }, { merge: false });
-    showToast("บันทึกแล้ว", "success");
-  } catch (err) { console.error(err); showToast("บันทึกไม่สำเร็จ", "error"); }
-}
-
-/* ── หัวข้อ/กลุ่มสาระ ── */
-async function loadLists() {
-  const [typesSnap, deptSnap] = await Promise.all([
+async function loadReferenceData() {
+  const [academicSnap, typesSnap, deptSnap] = await Promise.all([
+    db.collection("settings").doc("academic").get(),
     db.collection("settings").doc("activityTypes").get(),
     db.collection("settings").doc("departments").get(),
   ]);
-  document.getElementById("activityTypesList").value = ((typesSnap.exists && typesSnap.data().types) || DEFAULT_ACTIVITY_TYPES).join("\n");
-  document.getElementById("departmentsList").value = ((deptSnap.exists && deptSnap.data().departments) || DEFAULT_DEPARTMENTS).join("\n");
+  const academic = academicSnap.exists ? { ...DEFAULT_ACADEMIC, ...academicSnap.data() } : DEFAULT_ACADEMIC;
+  const types = (typesSnap.exists && typesSnap.data().types) || DEFAULT_ACTIVITY_TYPES;
+  const departments = (deptSnap.exists && deptSnap.data().departments) || DEFAULT_DEPARTMENTS;
+  refRoomsPerLevel = { ...academic.roomsPerLevel };
+
+  refLevelsEditor = chipEditor("chipLevels", academic.levels, {
+    placeholder: "เช่น มัธยมศึกษาปีที่ 4 — Enter เพื่อเพิ่ม",
+    onChange: renderRoomsPerLevel, // เพิ่ม/ลบระดับชั้น → บล็อกห้องด้านล่างปรับตามทันที
+  });
+  refTracksEditor = chipEditor("chipTracks", academic.tracks, { placeholder: "เช่น วิทย์-คณิต" });
+  refTypesEditor = chipEditor("chipTypes", types, { placeholder: "เช่น T - Talent & Creativity" });
+  refDeptsEditor = chipEditor("chipDepartments", departments, { placeholder: "เช่น วิทยาศาสตร์" });
+
+  renderRoomsPerLevel(academic.levels);
 }
 
-async function saveLists() {
-  const types = linesToArray(document.getElementById("activityTypesList").value);
-  const departments = linesToArray(document.getElementById("departmentsList").value);
+function renderRoomsPerLevel(levels) {
+  const box = document.getElementById("roomsPerLevelBox");
+  box.innerHTML = "";
+  if (!levels.length) {
+    box.innerHTML = '<p class="hint">เพิ่มระดับชั้นด้านบนก่อน แล้วจะมาตั้งห้องของแต่ละระดับที่นี่ได้</p>';
+    return;
+  }
+  levels.forEach((lvl, i) => {
+    const block = document.createElement("div");
+    block.className = "room-level-block";
+    block.innerHTML = `<div class="room-level-name"><i data-lucide="door-open" style="width:14px;height:14px"></i>${escapeHtml(lvl)}</div><div id="chipRoom-${i}"></div>`;
+    box.appendChild(block);
+    chipEditor("chipRoom-" + i, refRoomsPerLevel[lvl] || [], {
+      placeholder: "เช่น 1, 2, 3 — Enter เพื่อเพิ่ม",
+      onChange: (items) => { refRoomsPerLevel[lvl] = items; },
+    });
+  });
+  lucide.createIcons();
+}
+
+async function saveReferenceData() {
+  const levels = refLevelsEditor.get();
+  const tracks = refTracksEditor.get();
+  const types = refTypesEditor.get();
+  const departments = refDeptsEditor.get();
+  const roomsPerLevel = {};
+  levels.forEach((lvl) => { roomsPerLevel[lvl] = refRoomsPerLevel[lvl] || []; });
+
   try {
     await Promise.all([
+      db.collection("settings").doc("academic").set({ levels, tracks, roomsPerLevel }, { merge: false }),
       db.collection("settings").doc("activityTypes").set({ types }),
       db.collection("settings").doc("departments").set({ departments }),
     ]);
@@ -158,8 +176,54 @@ async function saveLists() {
   } catch (err) { console.error(err); showToast("บันทึกไม่สำเร็จ", "error"); }
 }
 
-function linesToArray(text) {
-  return text.split("\n").map((l) => l.trim()).filter(Boolean);
+/** chip editor ทั่วไป — ใส่ array เริ่มต้น, คืน {get,set} ให้ดึง/ตั้งค่าได้
+ *  พิมพ์แล้วกด Enter หรือ , เพื่อเพิ่ม, กดกากบาทที่แท็กเพื่อลบ, Backspace ตอนช่องว่างลบตัวท้าย */
+function chipEditor(containerId, initialItems, opts) {
+  opts = opts || {};
+  const container = document.getElementById(containerId);
+  let items = initialItems.slice();
+
+  function render() {
+    container.className = "chip-editor-list";
+    container.innerHTML = "";
+    items.forEach((item, i) => {
+      const chip = document.createElement("span");
+      chip.className = "chip";
+      chip.innerHTML = `${escapeHtml(item)} <button type="button" title="ลบ">&times;</button>`;
+      chip.querySelector("button").onclick = () => {
+        items.splice(i, 1);
+        render();
+        if (opts.onChange) opts.onChange(items.slice());
+      };
+      container.appendChild(chip);
+    });
+    const input = document.createElement("input");
+    input.type = "text";
+    input.className = "chip-input";
+    input.placeholder = opts.placeholder || "พิมพ์แล้วกด Enter เพื่อเพิ่ม";
+    input.addEventListener("keydown", (e) => {
+      if (e.key === "Enter" || e.key === ",") {
+        e.preventDefault();
+        const v = input.value.trim();
+        if (v && !items.includes(v)) {
+          items.push(v);
+          input.value = "";
+          render();
+          if (opts.onChange) opts.onChange(items.slice());
+        }
+      } else if (e.key === "Backspace" && !input.value && items.length) {
+        items.pop();
+        render();
+        if (opts.onChange) opts.onChange(items.slice());
+      }
+    });
+    container.appendChild(input);
+  }
+  render();
+  return {
+    get: () => items.slice(),
+    set: (newItems) => { items = newItems.slice(); render(); },
+  };
 }
 
 /* ── บุคลากร ── */

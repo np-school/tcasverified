@@ -7,7 +7,20 @@
 <link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 <link href="shared/styles.css" rel="stylesheet">
 <script src="https://unpkg.com/lucide@1.24.0"></script>
-<style>.add-row{display:flex;gap:8px;margin-bottom:16px;flex-wrap:wrap;} .add-row input,.add-row select{flex:1;min-width:180px;}</style>
+<style>
+.add-row{display:flex;gap:8px;margin-bottom:16px;flex-wrap:wrap;} .add-row input,.add-row select{flex:1;min-width:180px;}
+
+/* ── ข้อมูลอ้างอิง: chip editor ── */
+.ref-grid{display:grid;grid-template-columns:1fr 1fr;gap:16px;}
+.chip-editor-list{display:flex;flex-wrap:wrap;align-items:center;gap:8px;padding:10px;border:1px solid var(--border);border-radius:12px;background:var(--bg-alt);min-height:46px;}
+.chip{display:inline-flex;align-items:center;gap:6px;background:#fff;border:1px solid var(--border);border-radius:100px;padding:5px 6px 5px 12px;font-size:13px;font-weight:600;color:var(--text);white-space:nowrap;}
+.chip button{background:var(--bg-alt);border:none;border-radius:50%;width:18px;height:18px;display:flex;align-items:center;justify-content:center;cursor:pointer;color:var(--text3);font-size:14px;line-height:1;padding:0;flex-shrink:0;}
+.chip button:hover{background:var(--c-red-pale);color:var(--c-red-deep);}
+.chip-input{border:none;background:none;outline:none;font-size:13px;font-family:inherit;padding:6px 4px;flex:1;min-width:140px;color:var(--text);}
+.room-level-block{border:1px solid var(--border);border-radius:12px;padding:12px 14px;background:#fff;}
+.room-level-block .room-level-name{font-weight:800;font-size:13px;margin-bottom:8px;display:flex;align-items:center;gap:6px;color:var(--accent);}
+@media (max-width:860px){ .ref-grid{grid-template-columns:1fr;} }
+</style>
 </head>
 <body>
 
@@ -30,8 +43,7 @@
     <button class="sidebar-btn active staff" data-tab="staff"><i data-lucide="id-card" style="width:18px;height:18px"></i>บุคลากร</button>
     <button class="sidebar-btn" data-tab="dept"><i data-lucide="users" style="width:18px;height:18px"></i>ครูประจำกลุ่มสาระ</button>
     <button class="sidebar-btn" data-tab="guidance"><i data-lucide="user-check" style="width:18px;height:18px"></i>ครูแนะแนว</button>
-    <button class="sidebar-btn" data-tab="academic"><i data-lucide="school" style="width:18px;height:18px"></i>ห้องเรียน/กลุ่มการเรียน</button>
-    <button class="sidebar-btn" data-tab="lists"><i data-lucide="list-checks" style="width:18px;height:18px"></i>หัวข้อ/กลุ่มสาระ</button>
+    <button class="sidebar-btn" data-tab="reference"><i data-lucide="settings-2" style="width:18px;height:18px"></i>ข้อมูลอ้างอิง</button>
   </div>
   <div class="content">
 
@@ -74,38 +86,38 @@
       </div>
     </div>
 
-    <div class="tab-panel" id="tab-academic">
-      <div class="page-header"><div class="page-title">ห้องเรียน/กลุ่มการเรียน</div><div class="page-sub">ใช้แสดงเป็นตัวเลือกในฟอร์มกรอกข้อมูลนักเรียนตอนล็อกอินครั้งแรก</div></div>
-      <div class="form-section">
-        <div class="field" style="margin-bottom:16px;">
-          <label>ระดับชั้น (บรรทัดละ 1 ระดับ)</label>
-          <textarea id="academicLevels" rows="4"></textarea>
-        </div>
-        <div class="field" style="margin-bottom:16px;">
-          <label>ห้องต่อระดับชั้น — รูปแบบ: ชื่อระดับชั้น = รายชื่อห้องคั่นด้วยจุลภาค (1 บรรทัดต่อ 1 ระดับชั้น)</label>
-          <textarea id="academicRooms" rows="4" placeholder="มัธยมศึกษาปีที่ 4 = 1,2,3,4,5"></textarea>
-        </div>
-        <div class="field">
-          <label>กลุ่มการเรียน (บรรทัดละ 1 กลุ่ม)</label>
-          <textarea id="academicTracks" rows="4"></textarea>
-        </div>
-      </div>
-      <button class="btn-primary" onclick="saveAcademic()"><i data-lucide="save" style="width:15px;height:15px"></i>บันทึก</button>
-    </div>
+    <div class="tab-panel" id="tab-reference">
+      <div class="page-header"><div class="page-title">ข้อมูลอ้างอิง</div><div class="page-sub">ระดับชั้น ห้องเรียน กลุ่มการเรียน ประเภทกิจกรรม และกลุ่มสาระ — ใช้เป็นตัวเลือกในฟอร์มต่างๆ ทั่วระบบ พิมพ์แล้วกด Enter เพื่อเพิ่ม กดกากบาทที่แท็กเพื่อลบ</div></div>
 
-    <div class="tab-panel" id="tab-lists">
-      <div class="page-header"><div class="page-title">หัวข้อประเภทกิจกรรม และกลุ่มสาระ</div><div class="page-sub">ใช้เป็นตัวเลือกตอนนักเรียนส่งกิจกรรมใหม่</div></div>
-      <div class="form-section">
-        <div class="field" style="margin-bottom:16px;">
-          <label>ประเภทกิจกรรม (บรรทัดละ 1 ประเภท)</label>
-          <textarea id="activityTypesList" rows="5"></textarea>
+      <div class="ref-grid">
+        <div class="form-section">
+          <div class="form-section-title"><i data-lucide="layers" style="width:16px;height:16px"></i>ระดับชั้น</div>
+          <div id="chipLevels"></div>
         </div>
-        <div class="field">
-          <label>กลุ่มสาระการเรียนรู้ (บรรทัดละ 1 กลุ่มสาระ)</label>
-          <textarea id="departmentsList" rows="6"></textarea>
+
+        <div class="form-section">
+          <div class="form-section-title"><i data-lucide="git-branch" style="width:16px;height:16px"></i>กลุ่มการเรียน</div>
+          <div id="chipTracks"></div>
+        </div>
+
+        <div class="form-section">
+          <div class="form-section-title"><i data-lucide="tag" style="width:16px;height:16px"></i>ประเภทกิจกรรม (หมวดหมู่ TCAS)</div>
+          <div id="chipTypes"></div>
+        </div>
+
+        <div class="form-section">
+          <div class="form-section-title"><i data-lucide="book-open" style="width:16px;height:16px"></i>กลุ่มสาระการเรียนรู้</div>
+          <div id="chipDepartments"></div>
+        </div>
+
+        <div class="form-section" style="grid-column:1 / -1;">
+          <div class="form-section-title"><i data-lucide="door-open" style="width:16px;height:16px"></i>ห้องต่อระดับชั้น</div>
+          <p class="hint" style="margin-bottom:12px;">แก้ระดับชั้นด้านบนก่อน รายการห้องของแต่ละระดับด้านล่างจะปรับตามอัตโนมัติ</p>
+          <div id="roomsPerLevelBox" style="display:flex;flex-direction:column;gap:12px;"></div>
         </div>
       </div>
-      <button class="btn-primary" onclick="saveLists()"><i data-lucide="save" style="width:15px;height:15px"></i>บันทึก</button>
+
+      <button class="btn-primary" style="margin-top:18px;" onclick="saveReferenceData()"><i data-lucide="save" style="width:15px;height:15px"></i>บันทึกทั้งหมด</button>
     </div>
 
   </div>
