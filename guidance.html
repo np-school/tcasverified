@@ -15,12 +15,12 @@
 
 <div class="navbar dark"><div class="navbar-inner">
   <div class="navbar-brand">
+    <button class="navbar-menu-btn" id="navMenuBtn" title="เมนู" onclick="toggleSidebar(event)"><i data-lucide="menu" style="width:18px;height:18px"></i></button>
     <img class="navbar-mark-img" src="https://firebasestorage.googleapis.com/v0/b/np-webapp-74616.firebasestorage.app/o/img%2Flogo_np.gif?alt=media&token=caa0869b-c98f-4ad3-8ee9-930e8789602e" alt="ตราโรงเรียนหนองกี่พิทยาคม">
     <div><div class="navbar-title">NP-TCAS Verified</div><div class="navbar-subtitle">งานแนะแนว</div></div>
   </div>
   <div class="navbar-user" id="navbarUser"><span id="userLabel"></span><img id="userAvatar" class="navbar-avatar" alt="บัญชีผู้ใช้"><button class="navbar-logout" onclick="signOutUser()" title="ออกจากระบบ"><i data-lucide="log-out" style="width:16px;height:16px"></i></button></div>
-  <button class="navbar-menu-btn" id="navMenuBtn" title="เมนู" onclick="toggleSidebar(event)"><i data-lucide="menu" style="width:18px;height:18px"></i></button>
-</div></div>
+  </div></div>
 
 <div id="sidebarOverlay" onclick="closeSidebar()"></div>
 <div class="shell">
