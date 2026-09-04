@@ -98,9 +98,19 @@ function guardPage(allowedRoles, onReady) {
       return;
     }
 
+    setNavAvatar(user);
     if (overlay) overlay.style.display = "none";
     onReady(ctx);
   });
+}
+
+/** ตั้งรูปโปรไฟล์บน navbar (#userAvatar) จากบัญชี Google ที่ล็อกอิน ถ้าไม่มีรูป (บางบัญชีองค์กรปิดรูปไว้)
+ *  ใช้ตัวอักษรย่อจากชื่อ/อีเมลสร้างเป็นไอคอนสำรองแทน */
+function setNavAvatar(user) {
+  const el = document.getElementById("userAvatar");
+  if (!el) return;
+  el.src = user.photoURL || "https://ui-avatars.com/api/?name=" + encodeURIComponent(user.displayName || user.email || "U") + "&background=1d4ed8&color=fff";
+  el.alt = user.displayName || user.email || "บัญชีผู้ใช้";
 }
 
 /** เปิด/ปิด sidebar แบบ drawer บนมือถือ (ปุ่มแฮมเบอร์เกอร์ #navMenuBtn เปิด #sidebar

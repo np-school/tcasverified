@@ -36,9 +36,9 @@ a{color:inherit;}
 .navbar-title{font-size:15px;font-weight:800;color:#fff;line-height:1.2;}
 .navbar-subtitle{font-size:11px;color:rgba(255,255,255,.65);}
 .navbar-user{display:flex;align-items:center;gap:10px;}
-.navbar-user span{color:#fff;font-size:13px;font-weight:600;}
-.navbar-avatar{width:34px;height:34px;border-radius:50%;border:2px solid rgba(255,255,255,.3);object-fit:cover;background:rgba(255,255,255,.2);}
-.navbar-logout{background:rgba(255,255,255,.12);border:none;color:#fff;padding:7px;border-radius:8px;cursor:pointer;display:flex;}
+.navbar-user span{display:none;} /* ไม่โชว์ชื่อ/อีเมลแล้ว ใช้รูปโปรไฟล์แทน */
+.navbar-avatar{width:34px;height:34px;border-radius:50%;border:2px solid rgba(255,255,255,.3);object-fit:cover;background:rgba(255,255,255,.2);flex-shrink:0;}
+.navbar-logout{background:rgba(255,255,255,.12);border:none;color:#fff;padding:7px;border-radius:8px;cursor:pointer;display:flex;flex-shrink:0;}
 .navbar-menu-btn{display:none;background:rgba(255,255,255,.12);border:none;color:#fff;padding:7px;border-radius:8px;cursor:pointer;flex-shrink:0;}
 
 /* ── Layout ── */
@@ -105,10 +105,12 @@ td{padding:12px;border-bottom:1px solid var(--border-soft);font-size:13.5px;vert
   .navbar-subtitle{font-size:10px;}
   .navbar-mark,.navbar-mark-img{width:32px;height:32px;}
 
-  /* เมนูผู้ใช้: มือถือซ่อนแค่อีเมล เหลือปุ่มออกจากระบบเป็นไอคอนลอยตัวเดียว
+  /* เมนูผู้ใช้: มือถือเหลือแค่รูปโปรไฟล์ + ปุ่มออกจากระบบ ย่อขนาดเล็กลงเล็กน้อยให้ไม่เบียดปุ่มแฮมเบอร์เกอร์
      (เมนูหลัก/แท็บต่างๆ ย้ายไปอยู่ใน sidebar drawer แทน — ดูด้านล่าง) */
   .navbar-menu-btn{display:flex;}
-  .navbar-user span{display:none;}
+  .navbar-user{gap:6px;}
+  .navbar-avatar{width:28px;height:28px;}
+  .navbar-logout{padding:6px;}
 
   /* เมนูหลัก (sidebar) พับเป็น drawer เลื่อนจากซ้าย เปิดด้วยปุ่มแฮมเบอร์เกอร์
      คลิกฉากหลังมืด (#sidebarOverlay) หรือเลือกเมนูใดๆ แล้วปิดอัตโนมัติ */

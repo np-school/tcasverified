@@ -103,6 +103,7 @@ async function loadAll() {
         <td><div style="font-weight:700;">${escapeHtml(a.studentName)}</div><div style="color:var(--text3);font-size:12px;">${escapeHtml(a.studentLevel)} ${escapeHtml(a.studentRoom)}</div></td>
         <td>${escapeHtml(a.title)}</td>
         <td>${escapeHtml(a.department || "")}</td>
+        <td style="color:var(--text2);">${escapeHtml(a.guidanceReviewerEmail || "")}</td>
         <td style="color:var(--text2);">${formatDate(a.guidanceReviewedAt)}</td>`;
       body.appendChild(tr);
     });

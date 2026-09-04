@@ -77,11 +77,12 @@ async function loadPending() {
 
 async function loadDone() {
   try {
-    const snap = await db.collection("activities")
-      .where("deptReviewerEmail", "==", ctxGlobal.user.email)
-      .orderBy("deptReviewedAt", "desc")
-      .limit(100)
-      .get();
+    // เดิม filter ด้วย deptReviewerEmail == ตัวเอง ทำให้เห็นแค่รายการที่ตัวเองตรวจคนเดียว
+    // แก้เป็นกรองด้วยกลุ่มสาระแทน — ครูทุกคนในกลุ่มสาระเดียวกันเห็นประวัติทั้งหมดร่วมกัน
+    // (แอดมินที่ไม่ได้เลือกกลุ่มสาระ = ctxGlobal.department เป็น null จะเห็นทุกกลุ่มสาระ)
+    let q = db.collection("activities").where("status", "in", ["dept_confirmed", "guidance_confirmed", "revision"]);
+    if (ctxGlobal.department) q = q.where("department", "==", ctxGlobal.department);
+    const snap = await q.orderBy("deptReviewedAt", "desc").limit(200).get();
 
     const body = document.getElementById("doneBody");
     body.innerHTML = "";
@@ -94,6 +95,7 @@ async function loadDone() {
         <td>${escapeHtml(a.studentName)}</td>
         <td>${escapeHtml(a.title)}</td>
         <td>${statusBadgeHtml(a.status)}</td>
+        <td style="color:var(--text2);">${escapeHtml(a.deptReviewerEmail || "")}</td>
         <td style="color:var(--text2);">${formatDate(a.deptReviewedAt)}</td>`;
       body.appendChild(tr);
     });
