@@ -106,7 +106,7 @@ document.getElementById("onboardForm").addEventListener("submit", async (e) => {
   btn.textContent = "กำลังบันทึก...";
   try {
     await db.collection("students").doc(currentCtx.user.uid).set(profile, { merge: true });
-    window.location.href = "student-history.html";
+    window.location.href = "dashboard.html";
   } catch (err) {
     console.error(err);
     showToast("บันทึกไม่สำเร็จ ลองใหม่อีกครั้ง", "error");

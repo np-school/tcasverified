@@ -52,7 +52,7 @@ function routeForRole(ctx) {
     case "admin": return "admin.html";
     case "dept_teacher": return "teacher-review.html";
     case "guidance": return "guidance.html";
-    case "student": return "student-history.html";
+    case "student": return "dashboard.html";
     case "student_new": return "onboarding.html";
     default: return null;
   }
@@ -166,7 +166,7 @@ function formatDate(ts) {
  */
 function renderAdminViewSwitch(currentPage) {
   const pages = [
-    { href: "student-history.html", label: "มุมมองนักเรียน", icon: "user" },
+    { href: "dashboard.html", label: "มุมมองนักเรียน", icon: "user" },
     { href: "teacher-review.html", label: "มุมมองครูกลุ่มสาระ", icon: "clipboard-check" },
     { href: "guidance.html", label: "มุมมองครูแนะแนว", icon: "badge-check" },
     { href: "admin.html", label: "มุมมองแอดมิน", icon: "settings" },
