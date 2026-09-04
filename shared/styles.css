@@ -29,15 +29,17 @@ a{color:inherit;}
 .navbar{padding:14px 24px;box-shadow:0 4px 12px rgba(0,0,0,.12);}
 .navbar.blue{background:var(--accent);}
 .navbar.dark{background:var(--c-ink-deep);}
-.navbar-inner{max-width:1280px;margin:0 auto;display:flex;align-items:center;justify-content:space-between;}
+.navbar-inner{max-width:1280px;margin:0 auto;display:flex;align-items:center;justify-content:space-between;position:relative;}
 .navbar-brand{display:flex;align-items:center;gap:10px;}
 .navbar-mark{width:38px;height:38px;border-radius:10px;background:rgba(255,255,255,.15);display:flex;align-items:center;justify-content:center;color:#fff;flex-shrink:0;}
+.navbar-mark-img{width:38px;height:38px;border-radius:10px;background:#fff;object-fit:contain;padding:4px;flex-shrink:0;}
 .navbar-title{font-size:15px;font-weight:800;color:#fff;line-height:1.2;}
 .navbar-subtitle{font-size:11px;color:rgba(255,255,255,.65);}
 .navbar-user{display:flex;align-items:center;gap:10px;}
 .navbar-user span{color:#fff;font-size:13px;font-weight:600;}
 .navbar-avatar{width:34px;height:34px;border-radius:50%;border:2px solid rgba(255,255,255,.3);object-fit:cover;background:rgba(255,255,255,.2);}
 .navbar-logout{background:rgba(255,255,255,.12);border:none;color:#fff;padding:7px;border-radius:8px;cursor:pointer;display:flex;}
+.navbar-menu-btn{display:none;background:rgba(255,255,255,.12);border:none;color:#fff;padding:7px;border-radius:8px;cursor:pointer;flex-shrink:0;}
 
 /* ── Layout ── */
 .shell{display:flex;max-width:1280px;margin:0 auto;min-height:calc(100vh - 66px);}
@@ -98,8 +100,21 @@ td{padding:12px;border-bottom:1px solid var(--border-soft);font-size:13.5px;vert
   .navbar{padding:12px 14px;}
   .navbar-title{font-size:14px;}
   .navbar-subtitle{font-size:10px;}
-  .navbar-mark{width:32px;height:32px;}
-  .navbar-user span{display:none;} /* ซ่อนชื่อผู้ใช้ ให้เหลือแค่ปุ่มออกจากระบบ ประหยัดพื้นที่ */
+  .navbar-mark,.navbar-mark-img{width:32px;height:32px;}
+
+  /* เมนูผู้ใช้ (ชื่อ + ออกจากระบบ) พับเป็นเมนูแฮมเบอร์เกอร์ กดแล้วกางเป็นการ์ดลอย
+     แทนที่จะเบียดอยู่บนแถบเดียวกับโลโก้เหมือนก่อนหน้านี้ */
+  .navbar-menu-btn{display:flex;}
+  .navbar-user{
+    display:none;position:absolute;top:calc(100% + 8px);right:0;z-index:60;
+    flex-direction:column;align-items:stretch;gap:6px;
+    background:#fff;border-radius:14px;box-shadow:0 12px 30px rgba(0,0,0,.2);
+    padding:10px;min-width:180px;
+  }
+  .navbar-user.open{display:flex;}
+  .navbar-user span{display:block;color:var(--text);font-size:12.5px;font-weight:700;padding:4px 8px 2px;word-break:break-all;}
+  .navbar-logout{background:var(--bg-alt);color:var(--text);justify-content:center;gap:8px;padding:9px;font-size:12.5px;font-weight:700;}
+  .navbar-logout::after{content:"ออกจากระบบ";}
 
   .shell{flex-direction:column;min-height:0;}
   .sidebar{
