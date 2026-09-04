@@ -103,21 +103,35 @@ function guardPage(allowedRoles, onReady) {
   });
 }
 
-/** เปิด/ปิดเมนูผู้ใช้แบบ dropdown บนมือถือ (ปุ่มแฮมเบอร์เกอร์ #navMenuBtn + กล่อง #navbarUser)
- *  เรียกตรงๆ ผ่าน onclick ในหน้า HTML (ไม่ใช้ DOMContentLoaded/addEventListener เพราะบางเบราว์เซอร์/
- *  ลำดับโหลดสคริปต์ทำให้ event ผูกไม่ทันหรือไม่ทำงาน) */
-function toggleNavMenu(e) {
-  if (e) e.stopPropagation();
-  const panel = document.getElementById("navbarUser");
-  if (panel) panel.classList.toggle("open");
+/** เปิด/ปิด sidebar แบบ drawer บนมือถือ (ปุ่มแฮมเบอร์เกอร์ #navMenuBtn เปิด #sidebar
+ *  + ฉากหลังมืด #sidebarOverlay) — เลือกเมนูในนั้นแล้วปิดอัตโนมัติ
+ *  ใช้ onclick ตรงๆ ในหน้า HTML เหมือนปุ่มอื่นๆ ในระบบ (ไม่พึ่ง DOMContentLoaded) */
+function openSidebar() {
+  const s = document.getElementById("sidebar");
+  const ov = document.getElementById("sidebarOverlay");
+  if (s) s.classList.add("open");
+  if (ov) ov.classList.add("open");
+  document.body.style.overflow = "hidden";
 }
+function closeSidebar() {
+  const s = document.getElementById("sidebar");
+  const ov = document.getElementById("sidebarOverlay");
+  if (s) s.classList.remove("open");
+  if (ov) ov.classList.remove("open");
+  document.body.style.overflow = "";
+}
+function toggleSidebar(e) {
+  if (e) e.stopPropagation();
+  const s = document.getElementById("sidebar");
+  if (!s) return;
+  if (s.classList.contains("open")) closeSidebar();
+  else openSidebar();
+}
+// เลือกเมนู/แท็บใดๆ ใน sidebar แล้วปิด drawer ให้อัตโนมัติ (ทั้ง <a href> และ <button data-tab>)
 document.addEventListener("click", (e) => {
-  const panel = document.getElementById("navbarUser");
-  const btn = document.getElementById("navMenuBtn");
-  if (!panel || !panel.classList.contains("open")) return;
-  if (panel.contains(e.target)) return;
-  if (btn && btn.contains(e.target)) return;
-  panel.classList.remove("open");
+  const sidebar = document.getElementById("sidebar");
+  if (!sidebar || !sidebar.classList.contains("open")) return;
+  if (e.target.closest(".sidebar-btn")) closeSidebar();
 });
 let toastTimer;
 function showToast(message, type = "default") {

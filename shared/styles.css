@@ -48,6 +48,9 @@ a{color:inherit;}
 .sidebar-btn:hover{background:var(--bg-alt);}
 .sidebar-btn.active{background:var(--accent);color:#fff;}
 .sidebar-btn.active.staff{background:var(--c-ink-deep);}
+.sidebar-close-btn{display:none;align-self:flex-end;background:var(--bg-alt);border:none;border-radius:8px;padding:7px;cursor:pointer;margin-bottom:8px;}
+#sidebarOverlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.45);z-index:199;}
+#sidebarOverlay.open{display:block;}
 .content{flex:1;padding:24px 28px;min-width:0;}
 .page-header{margin-bottom:20px;}
 .page-title{font-size:20px;font-weight:800;}
@@ -102,39 +105,27 @@ td{padding:12px;border-bottom:1px solid var(--border-soft);font-size:13.5px;vert
   .navbar-subtitle{font-size:10px;}
   .navbar-mark,.navbar-mark-img{width:32px;height:32px;}
 
-  /* เมนูผู้ใช้ (ชื่อ + ออกจากระบบ) พับเป็นเมนูแฮมเบอร์เกอร์ กดแล้วกางเป็นการ์ดลอย
-     แทนที่จะเบียดอยู่บนแถบเดียวกับโลโก้เหมือนก่อนหน้านี้ */
+  /* เมนูผู้ใช้: มือถือซ่อนแค่อีเมล เหลือปุ่มออกจากระบบเป็นไอคอนลอยตัวเดียว
+     (เมนูหลัก/แท็บต่างๆ ย้ายไปอยู่ใน sidebar drawer แทน — ดูด้านล่าง) */
   .navbar-menu-btn{display:flex;}
-  .navbar-user{
-    display:none;position:absolute;top:calc(100% + 8px);right:0;z-index:60;
-    flex-direction:column;align-items:stretch;gap:6px;
-    background:#fff;border-radius:14px;box-shadow:0 12px 30px rgba(0,0,0,.2);
-    padding:10px;min-width:180px;
-  }
-  .navbar-user.open{display:flex;}
-  .navbar-user span{display:block;color:var(--text);font-size:12.5px;font-weight:700;padding:4px 8px 2px;word-break:break-all;}
-  .navbar-logout{background:var(--bg-alt);color:var(--text);justify-content:center;gap:8px;padding:9px;font-size:12.5px;font-weight:700;}
-  .navbar-logout::after{content:"ออกจากระบบ";}
+  .navbar-user span{display:none;}
 
+  /* เมนูหลัก (sidebar) พับเป็น drawer เลื่อนจากซ้าย เปิดด้วยปุ่มแฮมเบอร์เกอร์
+     คลิกฉากหลังมืด (#sidebarOverlay) หรือเลือกเมนูใดๆ แล้วปิดอัตโนมัติ */
   .shell{flex-direction:column;min-height:0;}
   .sidebar{
-    width:100%;
-    display:flex;
-    flex-direction:row;
-    overflow-x:auto;
+    position:fixed;top:0;left:0;height:100vh;width:270px;max-width:82vw;
+    z-index:200;transform:translateX(-100%);transition:transform .25s ease;
+    background:#fff;box-shadow:4px 0 24px rgba(0,0,0,.18);
+    border-right:none;display:flex;flex-direction:column;overflow-y:auto;
     -webkit-overflow-scrolling:touch;
-    border-right:none;
-    border-bottom:1px solid var(--border);
-    padding:8px 10px;
-    gap:4px;
-    scrollbar-width:thin;
   }
+  .sidebar.open{transform:translateX(0);}
+  .sidebar-close-btn{display:flex;}
   .sidebar-btn{
     flex-shrink:0;
     white-space:nowrap;
-    margin-bottom:0;
-    padding:9px 12px;
-    font-size:13px;
+    margin-bottom:2px;
   }
   .content{padding:16px 14px;}
   .page-title{font-size:17px;}
