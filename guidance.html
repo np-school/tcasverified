@@ -7,6 +7,7 @@
 <link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 <link href="shared/styles.css" rel="stylesheet">
 <script src="https://unpkg.com/lucide@1.24.0"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 <style>
   .stat-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin-bottom:24px;}
   .stat-card{background:#fff;border:1px solid var(--border);border-radius:16px;padding:16px 18px;display:flex;flex-direction:column;gap:10px;}
@@ -122,8 +123,34 @@
     </div>
 
     <div class="tab-panel" id="tab-export">
-      <div class="page-header"><div class="page-title">ส่งออกข้อมูล</div><div class="page-sub">เลือกขอบเขต ประเภท และช่วงเวลาที่ต้องการ แล้วดาวน์โหลดเป็นไฟล์ CSV</div></div>
+      <div class="page-header"><div class="page-title">ส่งออกข้อมูล</div><div class="page-sub">เลือกรูปแบบฟอร์ม ขอบเขต ประเภท และช่วงเวลาที่ต้องการ แล้วดาวน์โหลดเป็นไฟล์ Excel (.xlsx)</div></div>
       <div class="card" style="max-width:640px;">
+
+        <div class="field" style="margin-bottom:16px;">
+          <label style="display:flex;align-items:center;justify-content:space-between;">
+            <span>รูปแบบข้อมูลที่จะส่งออก</span>
+            <label style="display:flex;align-items:center;gap:5px;font-weight:600;color:var(--text2);cursor:pointer;">
+              <input type="checkbox" id="exportFormatAll" checked style="width:14px;height:14px;accent-color:var(--accent);">เลือกทั้งหมด
+            </label>
+          </label>
+          <div id="exportFormatChecks" style="display:flex;flex-wrap:wrap;gap:8px 18px;margin-top:6px;background:var(--bg-alt);border-radius:10px;padding:12px 14px;">
+            <label style="display:flex;align-items:center;gap:6px;font-size:13px;font-weight:600;color:var(--text);cursor:pointer;">
+              <input type="checkbox" class="export-format-check" value="activity" checked style="width:15px;height:15px;accent-color:var(--accent);">กิจกรรม
+            </label>
+            <label style="display:flex;align-items:center;gap:6px;font-size:13px;font-weight:600;color:var(--text);cursor:pointer;">
+              <input type="checkbox" class="export-format-check" value="project" checked style="width:15px;height:15px;accent-color:var(--accent);">โครงงาน
+            </label>
+            <label style="display:flex;align-items:center;gap:6px;font-size:13px;font-weight:600;color:var(--text);cursor:pointer;">
+              <input type="checkbox" class="export-format-check" value="award" checked style="width:15px;height:15px;accent-color:var(--accent);">รางวัล
+            </label>
+            <label style="display:flex;align-items:center;gap:6px;font-size:13px;font-weight:600;color:var(--text);cursor:pointer;">
+              <input type="checkbox" class="export-format-check" value="course" checked style="width:15px;height:15px;accent-color:var(--accent);">หลักสูตรอบรม
+            </label>
+            <label style="display:flex;align-items:center;gap:6px;font-size:13px;font-weight:600;color:var(--text3);cursor:pointer;">
+              <input type="checkbox" class="export-format-check" value="legacy" checked style="width:15px;height:15px;accent-color:var(--accent);">อื่นๆ (ก่อนอัปเดตฟอร์ม)
+            </label>
+          </div>
+        </div>
 
         <div class="field" style="margin-bottom:16px;">
           <label>ขอบเขตข้อมูล</label>
@@ -160,10 +187,11 @@
           <div class="field"><label>ถึงวันที่</label><input type="date" id="exportDateTo"></div>
         </div>
 
-        <button class="btn-primary" id="exportBtn"><i data-lucide="download" style="width:15px;height:15px"></i>ดาวน์โหลด CSV</button>
+        <button class="btn-primary" id="exportBtn"><i data-lucide="download" style="width:15px;height:15px"></i>ดาวน์โหลดไฟล์ Excel (.xlsx)</button>
         <div class="hint" style="margin-top:12px;">
-          ไฟล์แยกตามรูปแบบข้อมูล (กิจกรรม/โครงงาน/รางวัล/หลักสูตรอบรม) ตรงตามเทมเพลตนำเข้าของโรงเรียนเป๊ะ
-          (หัวคอลัมน์ภาษาอังกฤษ เช่น citizen_id, program_title, exp_name ฯลฯ และวันที่แปลงเป็น พ.ศ. ให้อัตโนมัติ)
+          ไฟล์ .xlsx แยกตามรูปแบบที่เลือกไว้ด้านบน (กิจกรรม/โครงงาน/รางวัล/หลักสูตรอบรม) ตรงตามเทมเพลตนำเข้าของโรงเรียนเป๊ะ
+          ทั้งหัวคอลัมน์ภาษาอังกฤษ (citizen_id, program_title, exp_name ฯลฯ) และชนิดข้อมูล — คอลัมน์วันที่เป็นเซลล์วันที่จริง
+          (แปลงเป็น พ.ศ. ให้อัตโนมัติ) และ citizen_id เป็นตัวเลขเมื่อเป็นเลขบัตร ปชช. ล้วนๆ
           เฉพาะรายการที่ "ยืนยันสมบูรณ์แล้ว" เท่านั้น — หมายเหตุ: คอลัมน์ "fee" ในเทมเพลตไม่มีข้อมูลนี้เก็บอยู่ในระบบ จึงปล่อยว่างเสมอ
         </div>
       </div>

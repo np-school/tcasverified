@@ -345,12 +345,30 @@ function closeStudentDetail() {
 /* Schema ตรงตามเทมเพลตนำเข้าจริงของโรงเรียน (ไฟล์ กิจกรรม.xls / โครงงาน.xls / รางวัล.xls / หลักสูตรอบรม.xls)
    หัวคอลัมน์เป็นชื่อฟิลด์ภาษาอังกฤษตามเทมเพลตเป๊ะๆ ไม่ใช่หัวไทยแบบเดิม
    - title ในเทมเพลต = คำนำหน้าชื่อ (นาย/นางสาว) ไม่ใช่ชื่อกิจกรรม — ดึงจาก students/{uid} ผ่าน allStudents cache
-   - วันที่ทุกคอลัมน์ต้องเป็น พ.ศ. รูปแบบ "YYYY-MM-DD 00:00:00" (ระบบเราเก็บ ค.ศ. ต้อง +543 ตอน export)
+   - ไฟล์ต้นแบบเป็น .xls จริง (ไม่ใช่ CSV) และคอลัมน์วันที่ทั้งสอง (index 7, 8 ทุกเชมา) เป็น "เซลล์วันที่"
+     ชนิดตัวเลขจริง ไม่ใช่ข้อความ — ค่าตัวเลข (serial) ที่เก็บคือ "วันที่ ค.ศ. บวกปีเป็น พ.ศ. (+543 ปี) แล้วตี
+     เป็น Excel date serial ตามปฏิทินปกติ" (เช่น 15 ต.ค. 2568(พ.ศ.) → serial ของ 15 ต.ค. 2568 แบบปีปกติ = 244272)
+     ระบบเราเก็บวันที่เป็น ค.ศ. จึงต้องแปลงด้วย toExcelSerialFakeBE() ตอน export แล้วค่อยตั้งฟอร์แมตเซลล์
+     เป็นวันที่ (z: "m/d/yy") ทีหลังตอนสร้างชีต — ดู buildXlsxSheet()
+   - citizen_id ในเทมเพลตเป็น "ตัวเลข" ถ้าเป็นเลขบัตร ปชช. ล้วนๆ แต่เป็น "ข้อความ" ถ้ามีตัวอักษรปน (เช่น
+     รหัสพาสปอร์ตนักเรียนต่างชาติ "g123456789012") — ดู citizenIdCellValue()
    - เทมเพลตมีคอลัมน์ "fee" แต่ระบบเราไม่มีฟิลด์นี้เก็บไว้ ปล่อยว่างไว้เสมอ */
-function toBEDateTime(dateStr) {
+
+/** ค.ศ. "YYYY-MM-DD..." → Excel date serial ของ "พ.ศ. เดียวกันแต่ตีเป็นปีปกติ" (ตรงกับที่เทมเพลตโรงเรียนใช้) */
+function toExcelSerialFakeBE(dateStr) {
   const m = /^(\d{4})-(\d{2})-(\d{2})/.exec(dateStr || "");
   if (!m) return "";
-  return `${Number(m[1]) + 543}-${m[2]}-${m[3]} 00:00:00`;
+  const beYear = Number(m[1]) + 543;
+  const epoch = Date.UTC(1899, 11, 30); // จุดเริ่มต้น serial ของ Excel (ระบบวันที่ 1900)
+  const target = Date.UTC(beYear, Number(m[2]) - 1, Number(m[3]));
+  return Math.round((target - epoch) / 86400000);
+}
+
+/** citizen_id: เลขล้วน → number (ตรงกับเทมเพลต), มีตัวอักษรปน → string, ว่าง → "" */
+function citizenIdCellValue(id) {
+  const s = String(id ?? "").trim();
+  if (!s) return "";
+  return /^\d+$/.test(s) ? Number(s) : s;
 }
 
 const EXPORT_SCHEMA = {
@@ -358,15 +376,15 @@ const EXPORT_SCHEMA = {
     fileSuffix: "กิจกรรม",
     header: ["citizen_id", "title", "first_name", "last_name", "program_title", "exp_name", "description", "date", "end_date", "year", "level", "hours", "fee"],
     row: (a, s) => [
-      a.nationalId || (s && s.nationalId) || "",
+      citizenIdCellValue(a.nationalId || (s && s.nationalId)),
       (s && s.prefix) || "",
       (s && s.firstName) || "",
       (s && s.lastName) || "",
       a.title,
       (a.typeDetails && a.typeDetails.expName) || "",
       a.description || "",
-      toBEDateTime(a.eventDate),
-      toBEDateTime(a.endDate),
+      toExcelSerialFakeBE(a.eventDate),
+      toExcelSerialFakeBE(a.endDate),
       a.year,
       a.level || "",
       a.hours ?? "",
@@ -377,15 +395,15 @@ const EXPORT_SCHEMA = {
     fileSuffix: "โครงงาน",
     header: ["citizen_id", "title", "first_name", "last_name", "project_title", "project_type", "description", "date", "end_date", "year", "level", "hours", "fee"],
     row: (a, s) => [
-      a.nationalId || (s && s.nationalId) || "",
+      citizenIdCellValue(a.nationalId || (s && s.nationalId)),
       (s && s.prefix) || "",
       (s && s.firstName) || "",
       (s && s.lastName) || "",
       a.title,
       (a.typeDetails && a.typeDetails.projectType) || "",
       a.description || "",
-      toBEDateTime(a.eventDate),
-      toBEDateTime(a.endDate),
+      toExcelSerialFakeBE(a.eventDate),
+      toExcelSerialFakeBE(a.endDate),
       a.year,
       a.level || "",
       a.hours ?? "",
@@ -396,15 +414,15 @@ const EXPORT_SCHEMA = {
     fileSuffix: "รางวัล",
     header: ["citizen_id", "title", "first_name", "last_name", "program_title", "prize_name", "description", "date", "end_date", "year", "level", "hours", "fee"],
     row: (a, s) => [
-      a.nationalId || (s && s.nationalId) || "",
+      citizenIdCellValue(a.nationalId || (s && s.nationalId)),
       (s && s.prefix) || "",
       (s && s.firstName) || "",
       (s && s.lastName) || "",
       a.title,
       (a.typeDetails && a.typeDetails.prizeName) || "",
       a.description || "",
-      toBEDateTime(a.eventDate),
-      toBEDateTime(a.endDate),
+      toExcelSerialFakeBE(a.eventDate),
+      toExcelSerialFakeBE(a.endDate),
       a.year,
       a.level || "",
       a.hours ?? "",
@@ -415,15 +433,15 @@ const EXPORT_SCHEMA = {
     fileSuffix: "หลักสูตรอบรม",
     header: ["citizen_id", "title", "first_name", "last_name", "course_name", "course_level", "description", "issue_date", "expired_date", "score", "year", "category", "level", "hours", "fee"],
     row: (a, s) => [
-      a.nationalId || (s && s.nationalId) || "",
+      citizenIdCellValue(a.nationalId || (s && s.nationalId)),
       (s && s.prefix) || "",
       (s && s.firstName) || "",
       (s && s.lastName) || "",
       a.title,
       "",
       a.description || "",
-      toBEDateTime(a.eventDate),
-      toBEDateTime(a.typeDetails && a.typeDetails.expiredDate),
+      toExcelSerialFakeBE(a.eventDate),
+      toExcelSerialFakeBE(a.typeDetails && a.typeDetails.expiredDate),
       (a.typeDetails && a.typeDetails.score) || "",
       a.year,
       (a.typeDetails && a.typeDetails.category) || "",
@@ -434,12 +452,30 @@ const EXPORT_SCHEMA = {
   },
 };
 
+/** สลับให้ปุ่ม/checkbox "เลือกทั้งหมด" ตรงกับ checkbox รูปแบบย่อยที่ติ๊กอยู่จริง */
+function syncExportFormatAllToggle() {
+  const boxes = document.querySelectorAll(".export-format-check");
+  const allEl = document.getElementById("exportFormatAll");
+  if (!allEl) return;
+  allEl.checked = Array.from(boxes).every((b) => b.checked);
+}
+
 function setupExportControls() {
   const scopeEl = document.getElementById("exportScope");
   scopeEl.addEventListener("change", () => {
     document.getElementById("exportLevelBox").style.display = scopeEl.value === "level" ? "block" : "none";
     document.getElementById("exportStudentBox").style.display = scopeEl.value === "student" ? "block" : "none";
   });
+
+  document.querySelectorAll(".export-format-check").forEach((el) => {
+    el.addEventListener("change", syncExportFormatAllToggle);
+  });
+  const allEl = document.getElementById("exportFormatAll");
+  if (allEl) {
+    allEl.addEventListener("change", () => {
+      document.querySelectorAll(".export-format-check").forEach((el) => { el.checked = allEl.checked; });
+    });
+  }
 
   document.getElementById("exportLevel").addEventListener("change", updateExportRoomOptions);
 
@@ -499,6 +535,12 @@ document.getElementById("exportBtn").addEventListener("click", async () => {
   if (scope === "level" && !level) { showToast("กรุณาเลือกระดับชั้นก่อน", "error"); return; }
   if (scope === "student" && !exportSelectedStudentUid) { showToast("กรุณาค้นหาและเลือกนักเรียนก่อน", "error"); return; }
 
+  // ผู้ใช้เลือกได้ว่าจะส่งออกฟอร์มไหนบ้าง (กิจกรรม/โครงงาน/รางวัล/หลักสูตรอบรม/อื่นๆ)
+  const checkedFormats = new Set(
+    Array.from(document.querySelectorAll(".export-format-check:checked")).map((el) => el.value)
+  );
+  if (!checkedFormats.size) { showToast("กรุณาเลือกรูปแบบข้อมูลที่จะส่งออกอย่างน้อย 1 แบบ", "error"); return; }
+
   const btn = document.getElementById("exportBtn");
   btn.disabled = true;
   try {
@@ -530,18 +572,26 @@ document.getElementById("exportBtn").addEventListener("click", async () => {
     const studentByUid = new Map(allStudents.map((s) => [s.uid, s]));
     let fileCount = 0;
     Object.keys(EXPORT_SCHEMA).forEach((rt) => {
+      if (!checkedFormats.has(rt)) return;
       const list = grouped[rt];
       if (!list.length) return;
       const schema = EXPORT_SCHEMA[rt];
-      downloadCsv(`${schema.fileSuffix}-${suffix}.csv`, [schema.header, ...list.map((a) => schema.row(a, studentByUid.get(a.studentUid)))]);
+      const ws = buildXlsxSheet(schema, list, studentByUid);
+      downloadXlsx(`${schema.fileSuffix}-${suffix}.xlsx`, ws, schema.fileSuffix);
       fileCount++;
     });
 
-    if (legacy.length) {
+    if (legacy.length && checkedFormats.has("legacy")) {
       const header = ["ชื่อ-สกุล", "ชั้น", "ห้อง", "ชื่อกิจกรรม", "ประเภท", "กลุ่มสาระ", "วันที่จัดกิจกรรม", "ผู้ยืนยันครูกลุ่มสาระ", "ผู้ยืนยันครูแนะแนว"];
       const rows = [header, ...legacy.map((a) => [a.studentName, a.studentLevel, a.studentRoom, a.title, a.type, a.department, a.eventDate, a.deptReviewerEmail, a.guidanceReviewerEmail])];
-      downloadCsv(`np-tcas-verified-อื่นๆ-ก่อนอัปเดตฟอร์ม-${suffix}.csv`, rows);
+      const ws = XLSX.utils.aoa_to_sheet(rows);
+      downloadXlsx(`np-tcas-verified-อื่นๆ-ก่อนอัปเดตฟอร์ม-${suffix}.xlsx`, ws, "อื่นๆ");
       fileCount++;
+    }
+
+    if (!fileCount) {
+      showToast("ไม่มีข้อมูลตรงกับรูปแบบที่เลือกไว้", "error");
+      return;
     }
 
     showToast(`ส่งออกสำเร็จ ${fileCount} ไฟล์ (${items.length} รายการ)`, "success");
@@ -561,22 +611,26 @@ function exportFilenameSuffix({ scope, year, level, room }) {
   return parts.join("-");
 }
 
-function downloadCsv(filename, rows) {
-  const csv = "\uFEFF" + rows.map((r) => r.map(csvEscape).join(",")).join("\r\n");
-  const blob = new Blob([csv], { type: "text/csv;charset=utf-8;" });
-  const url = URL.createObjectURL(blob);
-  const a = document.createElement("a");
-  a.href = url;
-  a.download = filename;
-  document.body.appendChild(a);
-  a.click();
-  a.remove();
-  URL.revokeObjectURL(url);
+/** สร้าง worksheet จาก schema + รายการข้อมูล แล้วตั้งฟอร์แมตคอลัมน์วันที่ (index 7,8 ทุกเชมา)
+    ให้เป็นเซลล์วันที่จริง (ไม่ใช่ข้อความ) ตรงกับที่เทมเพลต .xls ของโรงเรียนใช้ */
+function buildXlsxSheet(schema, list, studentByUid) {
+  const rows = [schema.header, ...list.map((a) => schema.row(a, studentByUid.get(a.studentUid)))];
+  const ws = XLSX.utils.aoa_to_sheet(rows);
+  const dateCols = schema.dateCols || [7, 8];
+  for (let r = 1; r < rows.length; r++) {
+    dateCols.forEach((c) => {
+      const addr = XLSX.utils.encode_cell({ r, c });
+      const cell = ws[addr];
+      if (cell && cell.t === "n") cell.z = "m/d/yy"; // แสดงเป็นวันที่ ตรงฟอร์แมตเทมเพลตต้นฉบับ
+    });
+  }
+  return ws;
 }
 
-function csvEscape(val) {
-  const s = String(val ?? "");
-  return /[",\n]/.test(s) ? `"${s.replace(/"/g, '""')}"` : s;
+function downloadXlsx(filename, worksheet, sheetName) {
+  const wb = XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(wb, worksheet, (sheetName || "Sheet1").slice(0, 31));
+  XLSX.writeFile(wb, filename);
 }
 
 function escapeHtml(str) {
