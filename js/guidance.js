@@ -452,12 +452,32 @@ const EXPORT_SCHEMA = {
   },
 };
 
-/** สลับให้ปุ่ม/checkbox "เลือกทั้งหมด" ตรงกับ checkbox รูปแบบย่อยที่ติ๊กอยู่จริง */
+/** สลับให้ปุ่ม/checkbox "เลือกทั้งหมด" ตรงกับ checkbox รูปแบบย่อยที่ติ๊กอยู่จริง + อัปเดตข้อความนับจำนวน */
 function syncExportFormatAllToggle() {
-  const boxes = document.querySelectorAll(".export-format-check");
+  const boxes = Array.from(document.querySelectorAll(".export-format-check"));
   const allEl = document.getElementById("exportFormatAll");
-  if (!allEl) return;
-  allEl.checked = Array.from(boxes).every((b) => b.checked);
+  const checkedCount = boxes.filter((b) => b.checked).length;
+  if (allEl) allEl.checked = checkedCount === boxes.length;
+  const countEl = document.getElementById("exportFormatCount");
+  if (countEl) countEl.textContent = `เลือกไว้ ${checkedCount} จาก ${boxes.length} รูปแบบ`;
+}
+
+/** แสดงจุดเตือนบนหัวข้อ "ตัวกรองเพิ่มเติม" ว่ามีการตั้งค่าไว้กี่รายการ จะได้รู้ทันทีแม้ยังไม่ได้กางดู */
+function updateAdvancedFilterBadge() {
+  const badge = document.getElementById("exportAdvancedBadge");
+  if (!badge) return;
+  const active = [
+    document.getElementById("exportYearFilter").value,
+    document.getElementById("exportTypeFilter").value,
+    document.getElementById("exportDateFrom").value,
+    document.getElementById("exportDateTo").value,
+  ].filter(Boolean).length;
+  if (active) {
+    badge.style.display = "inline-flex";
+    badge.textContent = `ตั้งค่าไว้ ${active} รายการ`;
+  } else {
+    badge.style.display = "none";
+  }
 }
 
 function setupExportControls() {
@@ -474,8 +494,14 @@ function setupExportControls() {
   if (allEl) {
     allEl.addEventListener("change", () => {
       document.querySelectorAll(".export-format-check").forEach((el) => { el.checked = allEl.checked; });
+      syncExportFormatAllToggle();
     });
   }
+  syncExportFormatAllToggle();
+
+  ["exportYearFilter", "exportTypeFilter", "exportDateFrom", "exportDateTo"].forEach((id) => {
+    document.getElementById(id).addEventListener("change", updateAdvancedFilterBadge);
+  });
 
   document.getElementById("exportLevel").addEventListener("change", updateExportRoomOptions);
 
@@ -543,6 +569,7 @@ document.getElementById("exportBtn").addEventListener("click", async () => {
 
   const btn = document.getElementById("exportBtn");
   btn.disabled = true;
+  document.getElementById("exportResultPanel").style.display = "none";
   try {
     // ดึงจาก Firestore ด้วยเงื่อนไขเดิม (status + ปีการศึกษาถ้าเลือก) เท่านั้น — ตัวกรองที่เหลือ
     // (รายบุคคล/รายชั้น-ห้อง/ประเภท/ช่วงวันที่) กรองต่อฝั่ง client กันต้องสร้าง index เพิ่มทุกชุดตัวกรอง
@@ -570,31 +597,34 @@ document.getElementById("exportBtn").addEventListener("click", async () => {
 
     const suffix = exportFilenameSuffix({ scope, year, level, room });
     const studentByUid = new Map(allStudents.map((s) => [s.uid, s]));
-    let fileCount = 0;
+    const filesGenerated = []; // { filename, count } — ไว้แสดงสรุปผลให้ผู้ใช้เห็นชัดๆ หลังส่งออก
     Object.keys(EXPORT_SCHEMA).forEach((rt) => {
       if (!checkedFormats.has(rt)) return;
       const list = grouped[rt];
       if (!list.length) return;
       const schema = EXPORT_SCHEMA[rt];
       const ws = buildXlsxSheet(schema, list, studentByUid);
-      downloadXlsx(`${schema.fileSuffix}-${suffix}.xlsx`, ws, schema.fileSuffix);
-      fileCount++;
+      const filename = `${schema.fileSuffix}-${suffix}.xlsx`;
+      downloadXlsx(filename, ws, schema.fileSuffix);
+      filesGenerated.push({ filename, count: list.length });
     });
 
     if (legacy.length && checkedFormats.has("legacy")) {
       const header = ["ชื่อ-สกุล", "ชั้น", "ห้อง", "ชื่อกิจกรรม", "ประเภท", "กลุ่มสาระ", "วันที่จัดกิจกรรม", "ผู้ยืนยันครูกลุ่มสาระ", "ผู้ยืนยันครูแนะแนว"];
       const rows = [header, ...legacy.map((a) => [a.studentName, a.studentLevel, a.studentRoom, a.title, a.type, a.department, a.eventDate, a.deptReviewerEmail, a.guidanceReviewerEmail])];
       const ws = XLSX.utils.aoa_to_sheet(rows);
-      downloadXlsx(`np-tcas-verified-อื่นๆ-ก่อนอัปเดตฟอร์ม-${suffix}.xlsx`, ws, "อื่นๆ");
-      fileCount++;
+      const filename = `np-tcas-verified-รายการเก่า-${suffix}.xlsx`;
+      downloadXlsx(filename, ws, "รายการเก่า");
+      filesGenerated.push({ filename, count: legacy.length });
     }
 
-    if (!fileCount) {
+    if (!filesGenerated.length) {
       showToast("ไม่มีข้อมูลตรงกับรูปแบบที่เลือกไว้", "error");
       return;
     }
 
-    showToast(`ส่งออกสำเร็จ ${fileCount} ไฟล์ (${items.length} รายการ)`, "success");
+    renderExportResultPanel(filesGenerated, items.length);
+    showToast(`ส่งออกสำเร็จ ${filesGenerated.length} ไฟล์ (${items.length} รายการ)`, "success");
   } catch (err) {
     console.error(err);
     showToast("ส่งออกไม่สำเร็จ", "error");
@@ -602,6 +632,19 @@ document.getElementById("exportBtn").addEventListener("click", async () => {
     btn.disabled = false;
   }
 });
+
+/** สรุปผลหลังส่งออกให้เห็นชัดว่าได้ไฟล์อะไรบ้าง กี่รายการต่อไฟล์ — แทนที่จะให้เดาเองจากไฟล์ที่ดาวน์โหลดมา */
+function renderExportResultPanel(filesGenerated, totalCount) {
+  const panel = document.getElementById("exportResultPanel");
+  const list = document.getElementById("exportResultList");
+  list.innerHTML = filesGenerated.map((f) => `
+    <div class="export-result-row">
+      <span class="fname"><i data-lucide="file-spreadsheet" style="width:14px;height:14px"></i>${escapeHtml(f.filename)}</span>
+      <span class="fcount">${f.count} รายการ</span>
+    </div>`).join("");
+  panel.style.display = "block";
+  lucide.createIcons();
+}
 
 function exportFilenameSuffix({ scope, year, level, room }) {
   const parts = [];

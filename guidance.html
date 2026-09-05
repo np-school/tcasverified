@@ -29,6 +29,21 @@
   .quick-result-row:hover{background:var(--bg-alt);}
   .quick-result-row .sub{color:var(--text3);font-size:11.5px;}
 
+  .step-badge{display:inline-flex;align-items:center;justify-content:center;width:22px;height:22px;border-radius:50%;background:var(--accent);color:#fff;font-size:12px;font-weight:800;flex-shrink:0;}
+
+  .export-format-option{display:flex;align-items:flex-start;gap:8px;padding:4px 2px;cursor:pointer;}
+  .export-format-option input{width:15px;height:15px;accent-color:var(--accent);margin-top:2px;flex-shrink:0;}
+  .export-format-option-title{display:block;font-size:13px;font-weight:700;color:var(--text);}
+  .export-format-option-sub{display:block;font-size:11.5px;font-weight:600;color:var(--text3);margin-top:1px;}
+
+  .export-advanced-summary{list-style:none;cursor:pointer;display:flex;align-items:center;justify-content:space-between;padding:24px;}
+  .export-advanced-summary::-webkit-details-marker{display:none;}
+  #exportAdvancedBox[open] .export-advanced-summary{border-bottom:1px solid var(--border-soft);margin-bottom:0;}
+
+  .export-result-row{display:flex;align-items:center;justify-content:space-between;gap:10px;background:var(--bg-alt);border-radius:10px;padding:9px 12px;font-size:12.5px;}
+  .export-result-row .fname{font-weight:700;color:var(--text);display:flex;align-items:center;gap:6px;}
+  .export-result-row .fcount{color:var(--text2);font-weight:600;white-space:nowrap;}
+
   @media (max-width:900px){
     .stat-grid{grid-template-columns:repeat(2,1fr);}
     .dash-grid{grid-template-columns:1fr;}
@@ -123,52 +138,67 @@
     </div>
 
     <div class="tab-panel" id="tab-export">
-      <div class="page-header"><div class="page-title">ส่งออกข้อมูล</div><div class="page-sub">เลือกรูปแบบฟอร์ม ขอบเขต ประเภท และช่วงเวลาที่ต้องการ แล้วดาวน์โหลดเป็นไฟล์ Excel (.xlsx)</div></div>
-      <div class="card" style="max-width:640px;">
+      <div class="page-header"><div class="page-title">ส่งออกข้อมูล</div><div class="page-sub">ทำตาม 3 ขั้นตอนด้านล่าง แล้วกดดาวน์โหลดเป็นไฟล์ Excel (.xlsx)</div></div>
 
-        <div class="field" style="margin-bottom:16px;">
-          <label style="display:flex;align-items:center;justify-content:space-between;">
-            <span>รูปแบบข้อมูลที่จะส่งออก</span>
-            <label style="display:flex;align-items:center;gap:5px;font-weight:600;color:var(--text2);cursor:pointer;">
-              <input type="checkbox" id="exportFormatAll" checked style="width:14px;height:14px;accent-color:var(--accent);">เลือกทั้งหมด
-            </label>
+      <div class="form-section" style="max-width:640px;">
+        <div class="form-section-title">
+          <span class="step-badge">1</span>
+          เลือกรูปแบบฟอร์มที่ต้องการ
+        </div>
+        <div class="hint" style="margin:-10px 0 12px;">แต่ละรูปแบบจะได้ไฟล์แยกกัน 1 ไฟล์ หัวคอลัมน์ตรงตามเทมเพลตนำเข้าของโรงเรียน</div>
+
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px;">
+          <span id="exportFormatCount" style="font-size:12.5px;font-weight:700;color:var(--text2);">เลือกไว้ 5 จาก 5 รูปแบบ</span>
+          <label style="display:flex;align-items:center;gap:5px;font-size:12.5px;font-weight:600;color:var(--text2);cursor:pointer;">
+            <input type="checkbox" id="exportFormatAll" checked style="width:14px;height:14px;accent-color:var(--accent);">เลือกทั้งหมด
           </label>
-          <div id="exportFormatChecks" style="display:flex;flex-wrap:wrap;gap:8px 18px;margin-top:6px;background:var(--bg-alt);border-radius:10px;padding:12px 14px;">
-            <label style="display:flex;align-items:center;gap:6px;font-size:13px;font-weight:600;color:var(--text);cursor:pointer;">
-              <input type="checkbox" class="export-format-check" value="activity" checked style="width:15px;height:15px;accent-color:var(--accent);">กิจกรรม
-            </label>
-            <label style="display:flex;align-items:center;gap:6px;font-size:13px;font-weight:600;color:var(--text);cursor:pointer;">
-              <input type="checkbox" class="export-format-check" value="project" checked style="width:15px;height:15px;accent-color:var(--accent);">โครงงาน
-            </label>
-            <label style="display:flex;align-items:center;gap:6px;font-size:13px;font-weight:600;color:var(--text);cursor:pointer;">
-              <input type="checkbox" class="export-format-check" value="award" checked style="width:15px;height:15px;accent-color:var(--accent);">รางวัล
-            </label>
-            <label style="display:flex;align-items:center;gap:6px;font-size:13px;font-weight:600;color:var(--text);cursor:pointer;">
-              <input type="checkbox" class="export-format-check" value="course" checked style="width:15px;height:15px;accent-color:var(--accent);">หลักสูตรอบรม
-            </label>
-            <label style="display:flex;align-items:center;gap:6px;font-size:13px;font-weight:600;color:var(--text3);cursor:pointer;">
-              <input type="checkbox" class="export-format-check" value="legacy" checked style="width:15px;height:15px;accent-color:var(--accent);">อื่นๆ (ก่อนอัปเดตฟอร์ม)
-            </label>
-          </div>
+        </div>
+        <div id="exportFormatChecks" style="display:grid;grid-template-columns:1fr 1fr;gap:8px 14px;background:var(--bg-alt);border-radius:10px;padding:12px 14px;">
+          <label class="export-format-option">
+            <input type="checkbox" class="export-format-check" value="activity" checked>
+            <span><span class="export-format-option-title">กิจกรรม</span><span class="export-format-option-sub">ค่าย / อบรม / เข้าร่วมงาน</span></span>
+          </label>
+          <label class="export-format-option">
+            <input type="checkbox" class="export-format-check" value="project" checked>
+            <span><span class="export-format-option-title">โครงงาน</span><span class="export-format-option-sub">ผลงานที่จัดทำขึ้นเอง</span></span>
+          </label>
+          <label class="export-format-option">
+            <input type="checkbox" class="export-format-check" value="award" checked>
+            <span><span class="export-format-option-title">รางวัล</span><span class="export-format-option-sub">รางวัล/เกียรติบัตรจากการแข่งขัน</span></span>
+          </label>
+          <label class="export-format-option">
+            <input type="checkbox" class="export-format-check" value="course" checked>
+            <span><span class="export-format-option-title">หลักสูตรอบรม</span><span class="export-format-option-sub">คอร์ส/ประกาศนียบัตรออนไลน์</span></span>
+          </label>
+          <label class="export-format-option" style="grid-column:1 / -1;">
+            <input type="checkbox" class="export-format-check" value="legacy" checked>
+            <span><span class="export-format-option-title">รายการเก่า</span><span class="export-format-option-sub">ส่งไว้ก่อนระบบปรับให้ตรงฟอร์ม ยังแยกประเภทไม่ได้ — รวมไว้ในไฟล์เดียวต่างหาก</span></span>
+          </label>
+        </div>
+      </div>
+
+      <div class="form-section" style="max-width:640px;">
+        <div class="form-section-title">
+          <span class="step-badge">2</span>
+          เลือกว่าจะส่งออกของใคร
         </div>
 
         <div class="field" style="margin-bottom:16px;">
-          <label>ขอบเขตข้อมูล</label>
           <select id="exportScope">
-            <option value="all">ทั้งหมด (ทุกคน)</option>
-            <option value="level">รายชั้น / ห้อง</option>
-            <option value="student">รายบุคคล</option>
+            <option value="all">นักเรียนทั้งหมด</option>
+            <option value="level">เฉพาะระดับชั้น / ห้อง</option>
+            <option value="student">เฉพาะรายบุคคล</option>
           </select>
         </div>
 
         <div id="exportLevelBox" style="display:none;">
-          <div class="form-grid" style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:16px;">
+          <div class="form-grid" style="display:grid;grid-template-columns:1fr 1fr;gap:12px;">
             <div class="field"><label>ระดับชั้น</label><select id="exportLevel"></select></div>
             <div class="field"><label>ห้อง</label><select id="exportRoom"><option value="">ทุกห้อง</option></select></div>
           </div>
         </div>
 
-        <div id="exportStudentBox" style="display:none;margin-bottom:16px;">
+        <div id="exportStudentBox" style="display:none;">
           <div class="field">
             <label>ค้นหานักเรียน</label>
             <input type="text" id="exportStudentSearch" placeholder="พิมพ์ชื่อหรือรหัสนักเรียน">
@@ -176,23 +206,37 @@
           </div>
           <div id="exportStudentSelected" style="display:none;margin-top:10px;"></div>
         </div>
+      </div>
 
-        <div class="form-grid" style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:16px;">
-          <div class="field"><label>ปีการศึกษา</label><select id="exportYearFilter"><option value="">ทุกปี</option></select></div>
-          <div class="field"><label>ประเภทกิจกรรม</label><select id="exportTypeFilter"><option value="">ทุกประเภท</option></select></div>
+      <details class="form-section" id="exportAdvancedBox" style="max-width:640px;padding:0;">
+        <summary class="export-advanced-summary">
+          <span class="form-section-title" style="margin-bottom:0;"><i data-lucide="sliders-horizontal" style="width:16px;height:16px"></i>ตัวกรองเพิ่มเติม <span style="color:var(--text3);font-weight:600;">(ไม่บังคับ)</span></span>
+          <span id="exportAdvancedBadge" class="badge dept" style="display:none;"></span>
+        </summary>
+        <div style="padding:0 24px 24px;">
+          <div class="form-grid" style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:12px;">
+            <div class="field"><label>ปีการศึกษา</label><select id="exportYearFilter"><option value="">ทุกปี</option></select></div>
+            <div class="field"><label>ประเภทกิจกรรม</label><select id="exportTypeFilter"><option value="">ทุกประเภท</option></select></div>
+          </div>
+          <div class="form-grid" style="display:grid;grid-template-columns:1fr 1fr;gap:12px;">
+            <div class="field"><label>ตั้งแต่วันที่ (วันที่จัดกิจกรรม)</label><input type="date" id="exportDateFrom"></div>
+            <div class="field"><label>ถึงวันที่</label><input type="date" id="exportDateTo"></div>
+          </div>
         </div>
+      </details>
 
-        <div class="form-grid" style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:20px;">
-          <div class="field"><label>ตั้งแต่วันที่ (วันที่จัดกิจกรรม)</label><input type="date" id="exportDateFrom"></div>
-          <div class="field"><label>ถึงวันที่</label><input type="date" id="exportDateTo"></div>
+      <div class="card" style="max-width:640px;">
+        <div class="form-section-title" style="margin-bottom:14px;">
+          <span class="step-badge">3</span>
+          ดาวน์โหลด
         </div>
-
         <button class="btn-primary" id="exportBtn"><i data-lucide="download" style="width:15px;height:15px"></i>ดาวน์โหลดไฟล์ Excel (.xlsx)</button>
-        <div class="hint" style="margin-top:12px;">
-          ไฟล์ .xlsx แยกตามรูปแบบที่เลือกไว้ด้านบน (กิจกรรม/โครงงาน/รางวัล/หลักสูตรอบรม) ตรงตามเทมเพลตนำเข้าของโรงเรียนเป๊ะ
-          ทั้งหัวคอลัมน์ภาษาอังกฤษ (citizen_id, program_title, exp_name ฯลฯ) และชนิดข้อมูล — คอลัมน์วันที่เป็นเซลล์วันที่จริง
-          (แปลงเป็น พ.ศ. ให้อัตโนมัติ) และ citizen_id เป็นตัวเลขเมื่อเป็นเลขบัตร ปชช. ล้วนๆ
-          เฉพาะรายการที่ "ยืนยันสมบูรณ์แล้ว" เท่านั้น — หมายเหตุ: คอลัมน์ "fee" ในเทมเพลตไม่มีข้อมูลนี้เก็บอยู่ในระบบ จึงปล่อยว่างเสมอ
+        <div class="hint" style="margin-top:10px;">ส่งออกเฉพาะรายการที่ "ยืนยันสมบูรณ์แล้ว" เท่านั้น</div>
+
+        <div id="exportResultPanel" style="display:none;margin-top:16px;border-top:1px solid var(--border-soft);padding-top:16px;">
+          <div style="font-weight:700;font-size:13.5px;margin-bottom:8px;display:flex;align-items:center;gap:6px;color:var(--c-green-deep);"><i data-lucide="check-circle-2" style="width:16px;height:16px"></i>ส่งออกสำเร็จ</div>
+          <div id="exportResultList" style="display:flex;flex-direction:column;gap:6px;"></div>
+          <div class="hint" style="margin-top:10px;">หมายเหตุ: คอลัมน์ "fee" ในเทมเพลตไม่มีข้อมูลนี้เก็บอยู่ในระบบ จึงปล่อยว่างเสมอทุกไฟล์</div>
         </div>
       </div>
     </div>
