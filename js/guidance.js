@@ -342,26 +342,95 @@ function closeStudentDetail() {
    + กรองประเภทกิจกรรม + ช่วงวันที่จัดกิจกรรม (ทุกตัวกรองทำฝั่ง client
    หลังดึงข้อมูลตามปีมาแล้ว เพื่อไม่ต้องสร้าง composite index เพิ่ม)
    ═══════════════════════════════════════════════════════════════ */
+/* Schema ตรงตามเทมเพลตนำเข้าจริงของโรงเรียน (ไฟล์ กิจกรรม.xls / โครงงาน.xls / รางวัล.xls / หลักสูตรอบรม.xls)
+   หัวคอลัมน์เป็นชื่อฟิลด์ภาษาอังกฤษตามเทมเพลตเป๊ะๆ ไม่ใช่หัวไทยแบบเดิม
+   - title ในเทมเพลต = คำนำหน้าชื่อ (นาย/นางสาว) ไม่ใช่ชื่อกิจกรรม — ดึงจาก students/{uid} ผ่าน allStudents cache
+   - วันที่ทุกคอลัมน์ต้องเป็น พ.ศ. รูปแบบ "YYYY-MM-DD 00:00:00" (ระบบเราเก็บ ค.ศ. ต้อง +543 ตอน export)
+   - เทมเพลตมีคอลัมน์ "fee" แต่ระบบเราไม่มีฟิลด์นี้เก็บไว้ ปล่อยว่างไว้เสมอ */
+function toBEDateTime(dateStr) {
+  const m = /^(\d{4})-(\d{2})-(\d{2})/.exec(dateStr || "");
+  if (!m) return "";
+  return `${Number(m[1]) + 543}-${m[2]}-${m[3]} 00:00:00`;
+}
+
 const EXPORT_SCHEMA = {
   activity: {
     fileSuffix: "กิจกรรม",
-    header: ["เลขบัตรประชาชน", "ชื่อ-สกุล", "ชั้น", "ห้อง", "ชื่อกิจกรรม", "บทบาท/ผลที่ได้รับ", "รายละเอียด", "วันที่เริ่ม", "วันที่สิ้นสุด", "ปีการศึกษา", "ระดับ", "ชั่วโมง", "หมวดหมู่ TCAS", "กลุ่มสาระ"],
-    row: (a) => [a.nationalId || "", a.studentName, a.studentLevel, a.studentRoom, a.title, (a.typeDetails && a.typeDetails.expName) || "", a.description || "", a.eventDate, a.endDate || "", a.year, a.level || "", a.hours ?? "", a.type, a.department],
+    header: ["citizen_id", "title", "first_name", "last_name", "program_title", "exp_name", "description", "date", "end_date", "year", "level", "hours", "fee"],
+    row: (a, s) => [
+      a.nationalId || (s && s.nationalId) || "",
+      (s && s.prefix) || "",
+      (s && s.firstName) || "",
+      (s && s.lastName) || "",
+      a.title,
+      (a.typeDetails && a.typeDetails.expName) || "",
+      a.description || "",
+      toBEDateTime(a.eventDate),
+      toBEDateTime(a.endDate),
+      a.year,
+      a.level || "",
+      a.hours ?? "",
+      "",
+    ],
   },
   project: {
     fileSuffix: "โครงงาน",
-    header: ["เลขบัตรประชาชน", "ชื่อ-สกุล", "ชั้น", "ห้อง", "ชื่อโครงงาน", "ประเภทโครงงาน", "รายละเอียด", "วันที่เริ่ม", "วันที่สิ้นสุด", "ปีการศึกษา", "ระดับ", "ชั่วโมง", "หมวดหมู่ TCAS", "กลุ่มสาระ"],
-    row: (a) => [a.nationalId || "", a.studentName, a.studentLevel, a.studentRoom, a.title, (a.typeDetails && a.typeDetails.projectType) || "", a.description || "", a.eventDate, a.endDate || "", a.year, a.level || "", a.hours ?? "", a.type, a.department],
+    header: ["citizen_id", "title", "first_name", "last_name", "project_title", "project_type", "description", "date", "end_date", "year", "level", "hours", "fee"],
+    row: (a, s) => [
+      a.nationalId || (s && s.nationalId) || "",
+      (s && s.prefix) || "",
+      (s && s.firstName) || "",
+      (s && s.lastName) || "",
+      a.title,
+      (a.typeDetails && a.typeDetails.projectType) || "",
+      a.description || "",
+      toBEDateTime(a.eventDate),
+      toBEDateTime(a.endDate),
+      a.year,
+      a.level || "",
+      a.hours ?? "",
+      "",
+    ],
   },
   award: {
     fileSuffix: "รางวัล",
-    header: ["เลขบัตรประชาชน", "ชื่อ-สกุล", "ชั้น", "ห้อง", "ชื่อการแข่งขัน/รายการ", "ชื่อรางวัลที่ได้รับ", "รายละเอียด", "วันที่", "วันที่สิ้นสุด", "ปีการศึกษา", "ระดับ", "ชั่วโมง", "หมวดหมู่ TCAS", "กลุ่มสาระ"],
-    row: (a) => [a.nationalId || "", a.studentName, a.studentLevel, a.studentRoom, a.title, (a.typeDetails && a.typeDetails.prizeName) || "", a.description || "", a.eventDate, a.endDate || "", a.year, a.level || "", a.hours ?? "", a.type, a.department],
+    header: ["citizen_id", "title", "first_name", "last_name", "program_title", "prize_name", "description", "date", "end_date", "year", "level", "hours", "fee"],
+    row: (a, s) => [
+      a.nationalId || (s && s.nationalId) || "",
+      (s && s.prefix) || "",
+      (s && s.firstName) || "",
+      (s && s.lastName) || "",
+      a.title,
+      (a.typeDetails && a.typeDetails.prizeName) || "",
+      a.description || "",
+      toBEDateTime(a.eventDate),
+      toBEDateTime(a.endDate),
+      a.year,
+      a.level || "",
+      a.hours ?? "",
+      "",
+    ],
   },
   course: {
     fileSuffix: "หลักสูตรอบรม",
-    header: ["เลขบัตรประชาชน", "ชื่อ-สกุล", "ชั้น", "ห้อง", "ชื่อหลักสูตร", "หมวดหมู่หลักสูตร", "คะแนน/ผลสอบ", "รายละเอียด", "วันที่ออกใบรับรอง", "วันหมดอายุ", "ปีการศึกษา", "ระดับ", "ชั่วโมง", "หมวดหมู่ TCAS", "กลุ่มสาระ"],
-    row: (a) => [a.nationalId || "", a.studentName, a.studentLevel, a.studentRoom, a.title, (a.typeDetails && a.typeDetails.category) || "", (a.typeDetails && a.typeDetails.score) || "", a.description || "", a.eventDate, (a.typeDetails && a.typeDetails.expiredDate) || "", a.year, a.level || "", a.hours ?? "", a.type, a.department],
+    header: ["citizen_id", "title", "first_name", "last_name", "course_name", "course_level", "description", "issue_date", "expired_date", "score", "year", "category", "level", "hours", "fee"],
+    row: (a, s) => [
+      a.nationalId || (s && s.nationalId) || "",
+      (s && s.prefix) || "",
+      (s && s.firstName) || "",
+      (s && s.lastName) || "",
+      a.title,
+      "",
+      a.description || "",
+      toBEDateTime(a.eventDate),
+      toBEDateTime(a.typeDetails && a.typeDetails.expiredDate),
+      (a.typeDetails && a.typeDetails.score) || "",
+      a.year,
+      (a.typeDetails && a.typeDetails.category) || "",
+      a.level || "",
+      a.hours ?? "",
+      "",
+    ],
   },
 };
 
@@ -458,12 +527,13 @@ document.getElementById("exportBtn").addEventListener("click", async () => {
     items.forEach((a) => { if (grouped[a.recordType]) grouped[a.recordType].push(a); else legacy.push(a); });
 
     const suffix = exportFilenameSuffix({ scope, year, level, room });
+    const studentByUid = new Map(allStudents.map((s) => [s.uid, s]));
     let fileCount = 0;
     Object.keys(EXPORT_SCHEMA).forEach((rt) => {
       const list = grouped[rt];
       if (!list.length) return;
       const schema = EXPORT_SCHEMA[rt];
-      downloadCsv(`np-tcas-verified-${schema.fileSuffix}-${suffix}.csv`, [schema.header, ...list.map(schema.row)]);
+      downloadCsv(`${schema.fileSuffix}-${suffix}.csv`, [schema.header, ...list.map((a) => schema.row(a, studentByUid.get(a.studentUid)))]);
       fileCount++;
     });
 
