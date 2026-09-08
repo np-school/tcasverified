@@ -52,6 +52,55 @@
     .profile-card{padding:16px;}
     .mini-cert-grid{grid-template-columns:1fr;}
   }
+
+  /* ── โซนขั้นตอนการส่งกิจกรรมใหม่ ── */
+  .guide{margin-bottom:22px;}
+  .guide-panel{background:#fff;border:1px solid var(--border);border-radius:18px;padding:20px 22px 22px;}
+  .guide-header{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;margin-bottom:16px;}
+  .guide-heading{display:flex;align-items:center;gap:10px;}
+  .guide-mark{width:38px;height:38px;border-radius:11px;background:var(--c-green-pale);color:var(--c-green-deep);display:flex;align-items:center;justify-content:center;flex-shrink:0;}
+  .guide-title{font-size:15.5px;font-weight:800;}
+  .guide-sub{font-size:12px;color:var(--text2);margin-top:2px;}
+  .guide-steps{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:14px;}
+  .guide-step{background:var(--bg-alt);border-radius:14px;padding:15px 14px;}
+  .guide-step-num{width:24px;height:24px;border-radius:50%;background:var(--accent);color:#fff;font-size:12px;font-weight:800;display:flex;align-items:center;justify-content:center;margin-bottom:9px;}
+  .guide-step-title{font-size:12.5px;font-weight:700;margin-bottom:4px;display:flex;align-items:center;gap:6px;color:var(--text);}
+  .guide-step-desc{font-size:11.5px;color:var(--text2);line-height:1.55;}
+
+  /* ── โซนอัพเดตล่าสุดของทุกคน ── */
+  .showcase{margin-top:22px;}
+  .showcase-panel{background:#fff;border:1px solid var(--border);border-radius:18px;padding:20px 22px 24px;}
+  .showcase-header{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;border-bottom:1px solid var(--border-soft);padding-bottom:14px;margin-bottom:18px;}
+  .showcase-heading{display:flex;align-items:center;gap:10px;}
+  .showcase-mark{width:38px;height:38px;border-radius:11px;background:var(--accent-tint);color:var(--accent);display:flex;align-items:center;justify-content:center;flex-shrink:0;}
+  .showcase-title{font-size:15.5px;font-weight:800;}
+  .showcase-sub{font-size:12px;color:var(--text2);margin-top:2px;}
+  .showcase-count{font-size:11.5px;font-weight:700;color:var(--accent);background:var(--accent-tint);padding:5px 12px;border-radius:100px;white-space:nowrap;}
+  .showcase-loading{display:flex;align-items:center;gap:10px;color:var(--text2);font-size:13px;font-weight:700;padding:34px 0;justify-content:center;}
+  .spinner-sm{width:20px;height:20px;border:2.5px solid var(--border);border-top:2.5px solid var(--accent);border-radius:50%;animation:spin .8s linear infinite;flex-shrink:0;}
+
+  .cert-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:16px;}
+  .cert-card{background:#fff;border:1px solid var(--border);border-radius:16px;overflow:hidden;box-shadow:0 2px 8px rgba(0,0,0,.04);display:flex;flex-direction:column;transition:box-shadow .15s,transform .15s;}
+  .cert-card:hover{box-shadow:0 8px 20px rgba(0,0,0,.09);transform:translateY(-2px);}
+  .cert-thumb-wrap{position:relative;aspect-ratio:4/3;background:var(--bg-alt);display:flex;align-items:center;justify-content:center;overflow:hidden;}
+  .cert-thumb-wrap img{width:100%;height:100%;object-fit:cover;display:block;}
+  .cert-thumb-fallback{display:flex;flex-direction:column;align-items:center;gap:6px;color:var(--text3);font-size:11px;}
+  .cert-thumb-badge{position:absolute;top:8px;left:8px;}
+  .cert-body{padding:13px 14px 14px;display:flex;flex-direction:column;gap:7px;flex:1;}
+  .cert-dept{align-self:flex-start;}
+  .cert-type{font-size:10.5px;font-weight:800;color:var(--accent);letter-spacing:.2px;}
+  .cert-title{font-size:13.5px;font-weight:700;line-height:1.35;color:var(--text);}
+  .cert-detail{font-size:11.5px;color:var(--text2);line-height:1.5;}
+  .cert-student{font-size:11.5px;color:var(--text);font-weight:700;display:flex;align-items:center;gap:5px;}
+  .cert-student span.dim{color:var(--text3);font-weight:600;}
+  .cert-footer{margin-top:auto;display:flex;align-items:center;justify-content:space-between;gap:8px;padding-top:9px;border-top:1px solid var(--border-soft);}
+  .cert-date{font-size:11px;color:var(--text3);}
+  .cert-link{font-size:11.5px;color:var(--accent);font-weight:700;display:flex;align-items:center;gap:4px;text-decoration:none;flex-shrink:0;}
+
+  @media (max-width:420px){
+    .cert-grid{grid-template-columns:repeat(auto-fill,minmax(150px,1fr));}
+    .guide-panel,.showcase-panel{padding:16px 14px 18px;}
+  }
 </style>
 </head>
 <body>
@@ -88,6 +137,43 @@
 
     <div class="profile-card" id="profileCard"></div>
 
+    <section class="guide">
+      <div class="guide-panel">
+        <div class="guide-header">
+          <div class="guide-heading">
+            <div class="guide-mark"><i data-lucide="upload-cloud" style="width:18px;height:18px"></i></div>
+            <div>
+              <div class="guide-title">ขั้นตอนการส่งกิจกรรมใหม่</div>
+              <div class="guide-sub">4 ขั้นตอน ตั้งแต่กดปุ่มส่งจนได้รับการยืนยันครบ</div>
+            </div>
+          </div>
+          <button class="btn-primary" onclick="openSubmitModal()"><i data-lucide="plus" style="width:15px;height:15px"></i>ส่งกิจกรรมใหม่</button>
+        </div>
+        <div class="guide-steps">
+          <div class="guide-step">
+            <div class="guide-step-num">1</div>
+            <div class="guide-step-title"><i data-lucide="list-checks" style="width:14px;height:14px;color:var(--accent)"></i>เลือกรูปแบบ &amp; กรอกรายละเอียด</div>
+            <div class="guide-step-desc">กดปุ่ม "ส่งกิจกรรมใหม่" เลือกรูปแบบข้อมูล (กิจกรรม/โครงงาน/รางวัล/หลักสูตร) แล้วกรอกรายละเอียดให้ครบ</div>
+          </div>
+          <div class="guide-step">
+            <div class="guide-step-num">2</div>
+            <div class="guide-step-title"><i data-lucide="paperclip" style="width:14px;height:14px;color:var(--accent)"></i>แนบไฟล์เกียรติบัตร</div>
+            <div class="guide-step-desc">แนบไฟล์ PDF หรือรูปภาพ ไม่เกิน 6MB ระบบจะเก็บไฟล์ไว้ใน Google Drive กลางของโรงเรียนให้อัตโนมัติ</div>
+          </div>
+          <div class="guide-step">
+            <div class="guide-step-num">3</div>
+            <div class="guide-step-title"><i data-lucide="clipboard-check" style="width:14px;height:14px;color:var(--accent)"></i>รอครูตรวจสอบ 2 ขั้น</div>
+            <div class="guide-step-desc">ครูกลุ่มสาระตรวจก่อน แล้วครูแนะแนวยืนยันขั้นสุดท้าย ถ้าถูกตีกลับให้แก้ไขตามเหตุผลที่แจ้ง</div>
+          </div>
+          <div class="guide-step">
+            <div class="guide-step-num">4</div>
+            <div class="guide-step-title"><i data-lucide="folder-check" style="width:14px;height:14px;color:var(--accent)"></i>ติดตามสถานะ</div>
+            <div class="guide-step-desc">ดูความคืบหน้าได้ที่ "ประวัติการส่ง" เมื่อยืนยันครบแล้วจะไปแสดงในแฟ้มผลงานของคุณทันที</div>
+          </div>
+        </div>
+      </div>
+    </section>
+
     <div class="stat-grid" id="statGrid"></div>
 
     <div class="dash-grid">
@@ -115,6 +201,28 @@
         </div>
       </div>
     </div>
+
+    <section class="showcase">
+      <div class="showcase-panel">
+        <div class="showcase-header">
+          <div class="showcase-heading">
+            <div class="showcase-mark"><i data-lucide="sparkles" style="width:18px;height:18px"></i></div>
+            <div>
+              <div class="showcase-title">อัพเดตล่าสุดของทุกคน</div>
+              <div class="showcase-sub">เกียรติบัตร กิจกรรม และผลงานของเพื่อนๆ ที่ครูกลุ่มสาระตรวจสอบและรับรองแล้ว</div>
+            </div>
+          </div>
+          <div id="showcaseCount" class="showcase-count" style="display:none;"></div>
+        </div>
+
+        <div id="showcaseLoading" class="showcase-loading"><div class="spinner-sm"></div>กำลังโหลดผลงานล่าสุด...</div>
+        <div id="showcaseEmpty" class="empty-state" style="display:none;">
+          <i data-lucide="inbox" style="width:32px;height:32px;margin-bottom:8px;"></i>
+          <div>ยังไม่มีผลงานที่ครูกลุ่มสาระรับรองแล้ว</div>
+        </div>
+        <div id="showcaseGrid" class="cert-grid"></div>
+      </div>
+    </section>
 
   </div>
 </div>
