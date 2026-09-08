@@ -6,6 +6,18 @@ let pendingCache = [];       // dept_confirmed ทั้งหมด (รอย�
 let allStudents = [];        // นักเรียนทั้งหมดในระบบ (จาก collection students)
 let doneThisYearCache = [];  // guidance_confirmed ของปีการศึกษาปัจจุบัน (ไว้คำนวณสรุปแดชบอร์ด)
 let exportSelectedStudentUid = null;
+let deptPendingCache = [];   // submitted + revision ทั้งหมด (ไว้คำนวณภาพรวมกลุ่มสาระ)
+let departmentListCache = []; // รายชื่อกลุ่มสาระจาก settings/departments
+let activityTypeOptionsCache = []; // รายการหมวดหมู่กิจกรรมจาก settings/activityTypes (ใช้กับฟอร์มแก้ไข)
+let pendingEditId = null;    // id รายการที่กำลังเปิดแก้ไขอยู่ (โมดัลแก้ไข)
+let pendingGdRejectId = null; // id รายการที่กำลังจะตีกลับ (โมดัลตีกลับ)
+
+/* ฟิลด์เฉพาะแต่ละรูปแบบข้อมูล (ตรงกับ typeDetails ที่ shared/submit-modal.js บันทึกไว้ตอนนักเรียนส่ง) */
+const EDIT_EXTRA_FIELD_META = {
+  activity: { label: "บทบาท / ผลที่ได้รับ", key: "expName" },
+  project: { label: "ประเภท/สาขาโครงงาน", key: "projectType" },
+  award: { label: "ชื่อรางวัลที่ได้รับ", key: "prizeName" },
+};
 
 guardPage(["guidance", "admin"], (ctx) => {
   ctxGlobal = ctx;
@@ -21,6 +33,8 @@ guardPage(["guidance", "admin"], (ctx) => {
   loadDoneThisYear();
   loadRosterData();
   loadExportTypeOptions();
+  loadDeptOverviewData();
+  loadEditFormOptions();
   setupTabLinks();
   setupRosterControls();
   setupExportControls();
@@ -150,7 +164,11 @@ async function loadPending() {
           </div>
           <div style="display:flex;flex-direction:column;gap:8px;align-items:flex-end;">
             <a href="${a.certificateUrl}" target="_blank" style="color:var(--accent);font-weight:700;font-size:12.5px;display:flex;align-items:center;gap:5px;"><i data-lucide="file-text" style="width:14px;height:14px"></i>ดูเกียรติบัตร</a>
-            <button class="btn-approve" onclick="finalApprove('${a.id}')"><i data-lucide="badge-check" style="width:13px;height:13px"></i>ยืนยันขั้นสุดท้าย</button>
+            <div style="display:flex;gap:8px;flex-wrap:wrap;justify-content:flex-end;">
+              <button class="btn-secondary" onclick="openEditActivityModal('${a.id}')"><i data-lucide="pencil" style="width:13px;height:13px"></i>แก้ไข</button>
+              <button class="btn-reject" onclick="openGdRejectModal('${a.id}')"><i data-lucide="rotate-ccw" style="width:13px;height:13px"></i>ตีกลับ</button>
+              <button class="btn-approve" onclick="finalApprove('${a.id}')"><i data-lucide="badge-check" style="width:13px;height:13px"></i>ยืนยันขั้นสุดท้าย</button>
+            </div>
           </div>
         </div>`;
       list.appendChild(card);
@@ -159,6 +177,7 @@ async function loadPending() {
 
     renderDashboardPending();
     renderDashboardStats();
+    renderDeptOverview();
   } catch (err) {
     console.error(err);
     showToast("โหลดรายการไม่สำเร็จ", "error");
@@ -179,6 +198,183 @@ async function finalApprove(id) {
   } catch (err) {
     console.error(err);
     showToast("ยืนยันไม่สำเร็จ ลองใหม่อีกครั้ง", "error");
+  }
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   แก้ไขรายการที่นักเรียนส่ง (ครูแนะแนวแก้แทนได้ โดยไม่เปลี่ยนสถานะ)
+   ═══════════════════════════════════════════════════════════════ */
+async function loadEditFormOptions() {
+  try {
+    const [typesSnap, deptSnap] = await Promise.all([
+      db.collection("settings").doc("activityTypes").get(),
+      db.collection("settings").doc("departments").get(),
+    ]);
+    activityTypeOptionsCache = (typesSnap.exists && typesSnap.data().types) || [];
+    fillSelectOptions("gdEdit_type", activityTypeOptionsCache);
+    fillSelectOptions("gdEdit_department", (deptSnap.exists && deptSnap.data().departments) || []);
+    buildYearOptions("gdEdit_year");
+  } catch (err) {
+    console.warn("โหลดตัวเลือกฟอร์มแก้ไขไม่สำเร็จ จะเติมค่าจากรายการเดิมแทนตอนเปิดโมดัล", err);
+  }
+}
+
+function fillSelectOptions(id, values) {
+  const el = document.getElementById(id);
+  if (!el) return;
+  el.innerHTML = "";
+  values.forEach((v) => el.appendChild(new Option(v, v)));
+}
+
+/** เผื่อค่าที่เก็บไว้ในรายการเดิมไม่อยู่ในตัวเลือกปัจจุบันของ settings (เช่นกลุ่มสาระถูกลบ/เปลี่ยนชื่อไปแล้ว) จะได้ไม่หายไปจาก select เงียบๆ */
+function ensureSelectHasValue(id, value) {
+  if (!value) return;
+  const el = document.getElementById(id);
+  if (!el) return;
+  const exists = Array.from(el.options).some((o) => o.value === value);
+  if (!exists) el.appendChild(new Option(value, value));
+}
+
+function openEditActivityModal(id) {
+  const a = pendingCache.find((x) => x.id === id);
+  if (!a) { showToast("ไม่พบรายการนี้ อาจถูกดำเนินการไปแล้ว", "error"); return; }
+  pendingEditId = id;
+
+  document.getElementById("gdEditActivityStudent").textContent =
+    [a.studentName, a.studentLevel, a.studentRoom, RECORD_TYPE_LABEL[a.recordType]].filter(Boolean).join(" · ");
+
+  const titleLabel = a.recordType === "activity" ? "ชื่อกิจกรรม"
+    : a.recordType === "project" ? "ชื่อโครงงาน"
+    : a.recordType === "award" ? "ชื่อการแข่งขัน/รายการที่ได้รับรางวัล"
+    : a.recordType === "course" ? "ชื่อหลักสูตร" : "ชื่อรายการ";
+  document.getElementById("gdEdit_title_label").innerHTML = `${titleLabel} <span class="req">*</span>`;
+  document.getElementById("gdEdit_title").value = a.title || "";
+
+  const typeDetails = a.typeDetails || {};
+  const extraMeta = EDIT_EXTRA_FIELD_META[a.recordType];
+  const extraBox = document.getElementById("gdEdit_extraFieldBox");
+  const courseBox = document.getElementById("gdEdit_courseExtraBox");
+  extraBox.style.display = "none";
+  courseBox.style.display = "none";
+  if (extraMeta) {
+    extraBox.style.display = "block";
+    document.getElementById("gdEdit_extraFieldLabel").textContent = extraMeta.label;
+    document.getElementById("gdEdit_extraField").value = typeDetails[extraMeta.key] || "";
+  } else if (a.recordType === "course") {
+    courseBox.style.display = "block";
+    document.getElementById("gdEdit_courseCategory").value = typeDetails.category || "";
+    document.getElementById("gdEdit_courseScore").value = typeDetails.score || "";
+    document.getElementById("gdEdit_courseExpired").value = typeDetails.expiredDate || "";
+  }
+
+  ensureSelectHasValue("gdEdit_type", a.type);
+  ensureSelectHasValue("gdEdit_department", a.department);
+  document.getElementById("gdEdit_type").value = a.type || "";
+  document.getElementById("gdEdit_department").value = a.department || "";
+  document.getElementById("gdEdit_level").value = a.level || "school";
+  document.getElementById("gdEdit_hours").value = a.hours ?? "";
+  document.getElementById("gdEdit_date").value = a.eventDate || "";
+  document.getElementById("gdEdit_enddate").value = a.endDate || "";
+  document.getElementById("gdEdit_year").value = a.year || CURRENT_ACADEMIC_YEAR;
+  document.getElementById("gdEdit_desc").value = a.description || "";
+
+  document.getElementById("gdEditActivityOverlay").classList.add("open");
+  if (window.lucide) lucide.createIcons();
+}
+
+function closeEditActivityModal() {
+  document.getElementById("gdEditActivityOverlay").classList.remove("open");
+  pendingEditId = null;
+}
+
+async function saveEditActivity() {
+  if (!pendingEditId) return;
+  const a = pendingCache.find((x) => x.id === pendingEditId);
+  if (!a) { showToast("ไม่พบรายการนี้ อาจถูกดำเนินการไปแล้ว", "error"); closeEditActivityModal(); return; }
+
+  const title = document.getElementById("gdEdit_title").value.trim();
+  const eventDate = document.getElementById("gdEdit_date").value;
+  if (!title || !eventDate) {
+    showToast("กรุณากรอกชื่อรายการและวันที่เริ่มกิจกรรมให้ครบ", "error");
+    return;
+  }
+
+  const typeDetails = { ...(a.typeDetails || {}) };
+  const extraMeta = EDIT_EXTRA_FIELD_META[a.recordType];
+  if (extraMeta) {
+    typeDetails[extraMeta.key] = document.getElementById("gdEdit_extraField").value.trim();
+  } else if (a.recordType === "course") {
+    typeDetails.category = document.getElementById("gdEdit_courseCategory").value.trim() || null;
+    typeDetails.score = document.getElementById("gdEdit_courseScore").value.trim() || null;
+    typeDetails.expiredDate = document.getElementById("gdEdit_courseExpired").value || null;
+  }
+
+  const hoursVal = document.getElementById("gdEdit_hours").value;
+  const updates = {
+    title,
+    type: document.getElementById("gdEdit_type").value,
+    department: document.getElementById("gdEdit_department").value,
+    level: document.getElementById("gdEdit_level").value,
+    hours: hoursVal ? Number(hoursVal) : null,
+    eventDate,
+    endDate: document.getElementById("gdEdit_enddate").value || null,
+    year: Number(document.getElementById("gdEdit_year").value),
+    description: document.getElementById("gdEdit_desc").value.trim() || null,
+    typeDetails,
+  };
+
+  const btn = document.getElementById("gdEditActivitySaveBtn");
+  btn.disabled = true;
+  try {
+    await db.collection("activities").doc(pendingEditId).update(updates);
+    showToast("บันทึกการแก้ไขแล้ว", "success");
+    closeEditActivityModal();
+    loadPending();
+    loadDeptOverviewData();
+  } catch (err) {
+    console.error(err);
+    showToast("บันทึกไม่สำเร็จ ลองใหม่อีกครั้ง", "error");
+  } finally {
+    btn.disabled = false;
+  }
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   ตีกลับให้นักเรียนกลับไปแก้ไขส่งใหม่ (เหมือนหน้าครูกลุ่มสาระ แต่ยิงจากขั้นแนะแนว)
+   ═══════════════════════════════════════════════════════════════ */
+function openGdRejectModal(id) {
+  const a = pendingCache.find((x) => x.id === id);
+  pendingGdRejectId = id;
+  document.getElementById("gdRejectModalWho").textContent = a ? `${a.studentName || ""} · ${a.title || ""}` : "";
+  document.getElementById("gdRejectReason").value = "";
+  document.getElementById("gdRejectModal").classList.add("open");
+}
+
+function closeGdRejectModal() {
+  document.getElementById("gdRejectModal").classList.remove("open");
+  pendingGdRejectId = null;
+}
+
+async function confirmGdReject() {
+  const reason = document.getElementById("gdRejectReason").value.trim();
+  if (!reason) {
+    showToast("กรุณาระบุเหตุผลที่ตีกลับ", "error");
+    return;
+  }
+  try {
+    await db.collection("activities").doc(pendingGdRejectId).update({
+      status: "revision",
+      revisionReason: reason,
+      guidanceReviewerEmail: ctxGlobal.user.email,
+      guidanceReviewedAt: firebase.firestore.FieldValue.serverTimestamp(),
+    });
+    showToast("ตีกลับให้นักเรียนแก้ไขแล้ว", "success");
+    closeGdRejectModal();
+    loadPending();
+    loadDeptOverviewData();
+  } catch (err) {
+    console.error(err);
+    showToast("ตีกลับไม่สำเร็จ ลองใหม่อีกครั้ง", "error");
   }
 }
 
@@ -220,9 +416,68 @@ async function loadDoneThisYear() {
       .get();
     doneThisYearCache = snap.docs.map((d) => d.data());
     renderDashboardStats();
+    renderDeptOverview();
   } catch (err) {
     console.error(err);
   }
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   ภาพรวมสถานะการส่งแยกตามกลุ่มสาระ — ให้ครูแนะแนวเห็นว่ากลุ่มสาระไหน
+   ยังมีรายการค้างรอครูกลุ่มสาระกดยืนยันอยู่เท่าไหร่ ไม่ต้องไล่เปิดทีละกลุ่มสาระ
+   ═══════════════════════════════════════════════════════════════ */
+async function loadDeptOverviewData() {
+  try {
+    const [deptSnap, statusSnap] = await Promise.all([
+      db.collection("settings").doc("departments").get(),
+      db.collection("activities").where("status", "in", ["submitted", "revision"]).get(),
+    ]);
+    departmentListCache = (deptSnap.exists && deptSnap.data().departments) || [];
+    deptPendingCache = statusSnap.docs.map((d) => d.data());
+    renderDeptOverview();
+  } catch (err) {
+    console.error(err);
+    showToast("โหลดภาพรวมกลุ่มสาระไม่สำเร็จ", "error");
+  }
+}
+
+function renderDeptOverview() {
+  const body = document.getElementById("gdDeptOverviewBody");
+  const empty = document.getElementById("gdDeptOverviewEmpty");
+  if (!body) return; // ยังไม่ถึงตอนโหลดหน้าเสร็จ
+
+  // รวมรายชื่อกลุ่มสาระจาก settings + กลุ่มสาระที่มีข้อมูลจริงอยู่ (กันกรณีตั้งค่ายังไม่ครบ)
+  const depts = new Set(departmentListCache);
+  deptPendingCache.forEach((a) => a.department && depts.add(a.department));
+  pendingCache.forEach((a) => a.department && depts.add(a.department));
+  doneThisYearCache.forEach((a) => a.department && depts.add(a.department));
+
+  const rows = [...depts].map((dept) => ({
+    dept,
+    submitted: deptPendingCache.filter((a) => a.department === dept && a.status === "submitted").length,
+    revision: deptPendingCache.filter((a) => a.department === dept && a.status === "revision").length,
+    deptConfirmed: pendingCache.filter((a) => a.department === dept).length,
+    done: doneThisYearCache.filter((a) => a.department === dept).length,
+  })).sort((a, b) => b.submitted - a.submitted || a.dept.localeCompare(b.dept, "th"));
+
+  const totalSubmitted = rows.reduce((sum, r) => sum + r.submitted, 0);
+  const totalEl = document.getElementById("gdDeptOverviewTotal");
+  if (totalEl) totalEl.textContent = totalSubmitted ? `รวมรอครูกลุ่มสาระตรวจ ${totalSubmitted} รายการ` : "ไม่มีรายการค้างรอครูกลุ่มสาระตรวจ";
+
+  body.innerHTML = "";
+  empty.style.display = rows.length ? "none" : "block";
+
+  rows.forEach((r) => {
+    const tr = document.createElement("tr");
+    tr.innerHTML = `
+      <td style="font-weight:700;">${escapeHtml(r.dept)}</td>
+      <td>${r.submitted ? `<span class="badge submitted">${r.submitted} รายการ</span>` : `<span style="color:var(--text3);">-</span>`}</td>
+      <td>${r.deptConfirmed ? `<span class="badge dept">${r.deptConfirmed} รายการ</span>` : `<span style="color:var(--text3);">-</span>`}</td>
+      <td>${r.revision ? `<span class="badge revise">${r.revision} รายการ</span>` : `<span style="color:var(--text3);">-</span>`}</td>
+      <td style="color:var(--text2);">${r.done}</td>`;
+    body.appendChild(tr);
+  });
+  lucide.createIcons();
 }
 
 /* ═══════════════════════════════════════════════════════════════

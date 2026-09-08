@@ -81,6 +81,26 @@
 
       <div class="stat-grid" id="gdStatGrid"></div>
 
+      <div class="dash-panel" id="gdDeptOverviewPanel" style="margin-bottom:20px;">
+        <div class="dash-panel-head">
+          <div class="dash-panel-title"><i data-lucide="layers" style="width:17px;height:17px;color:var(--accent)"></i>สถานะการส่งแยกตามกลุ่มสาระ</div>
+          <span id="gdDeptOverviewTotal" style="font-size:12.5px;font-weight:700;color:var(--text2);"></span>
+        </div>
+        <div style="overflow-x:auto;">
+          <table id="gdDeptOverviewTable">
+            <thead><tr>
+              <th>กลุ่มสาระ</th>
+              <th>รอครูกลุ่มสาระตรวจ</th>
+              <th>รอครูแนะแนวยืนยัน</th>
+              <th>ตีกลับ/รอแก้ไข</th>
+              <th>ยืนยันสมบูรณ์ปีนี้</th>
+            </tr></thead>
+            <tbody id="gdDeptOverviewBody"></tbody>
+          </table>
+        </div>
+        <div id="gdDeptOverviewEmpty" class="empty-state" style="display:none;padding:20px 0;"><i data-lucide="inbox" style="width:28px;height:28px;margin-bottom:8px;"></i><div>ยังไม่มีข้อมูลกลุ่มสาระ</div></div>
+      </div>
+
       <div class="dash-grid">
         <div class="dash-panel">
           <div class="dash-panel-head">
@@ -239,6 +259,73 @@
           <div class="hint" style="margin-top:10px;">หมายเหตุ: คอลัมน์ "fee" ในเทมเพลตไม่มีข้อมูลนี้เก็บอยู่ในระบบ จึงปล่อยว่างเสมอทุกไฟล์</div>
         </div>
       </div>
+    </div>
+  </div>
+</div>
+
+<div class="modal-overlay" id="gdEditActivityOverlay">
+  <div class="modal-box wide">
+    <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:10px;">
+      <div>
+        <h3 style="margin-bottom:2px;">แก้ไขรายการที่นักเรียนส่ง</h3>
+        <div style="font-size:12.5px;color:var(--text2);" id="gdEditActivityStudent"></div>
+      </div>
+      <button type="button" class="icon-btn" onclick="closeEditActivityModal()"><i data-lucide="x" style="width:18px;height:18px"></i></button>
+    </div>
+
+    <form id="gdEditActivityForm" style="margin-top:16px;">
+      <div class="form-grid">
+        <div class="field full"><label id="gdEdit_title_label">ชื่อรายการ <span class="req">*</span></label><input id="gdEdit_title" required></div>
+
+        <div class="field full" id="gdEdit_extraFieldBox" style="display:none;">
+          <label id="gdEdit_extraFieldLabel"></label>
+          <input id="gdEdit_extraField">
+        </div>
+
+        <div class="field full" id="gdEdit_courseExtraBox" style="display:none;">
+          <div class="form-grid" style="grid-template-columns:1fr 1fr 1fr;gap:14px;">
+            <div class="field"><label>หมวดหมู่หลักสูตร</label><input id="gdEdit_courseCategory"></div>
+            <div class="field"><label>คะแนน/ผลสอบ</label><input id="gdEdit_courseScore"></div>
+            <div class="field"><label>วันหมดอายุ</label><input type="date" id="gdEdit_courseExpired"></div>
+          </div>
+        </div>
+
+        <div class="field"><label>หมวดหมู่กิจกรรม (TCAS Certified)</label><select id="gdEdit_type"></select></div>
+        <div class="field"><label>กลุ่มสาระที่เกี่ยวข้อง</label><select id="gdEdit_department"></select></div>
+        <div class="field"><label>ระดับ</label>
+          <select id="gdEdit_level">
+            <option value="school">ระดับโรงเรียน</option>
+            <option value="regional">ระดับภูมิภาค/จังหวัด</option>
+            <option value="national">ระดับประเทศ</option>
+            <option value="international">ระดับนานาชาติ</option>
+          </select>
+        </div>
+        <div class="field"><label>จำนวนชั่วโมง (ถ้ามี)</label><input type="number" min="0" id="gdEdit_hours"></div>
+        <div class="field"><label>วันที่เริ่มกิจกรรม <span class="req">*</span></label><input type="date" id="gdEdit_date" required></div>
+        <div class="field"><label>วันที่สิ้นสุด (ถ้ามี)</label><input type="date" id="gdEdit_enddate"></div>
+        <div class="field"><label>ปีการศึกษา <span class="req">*</span></label><select id="gdEdit_year"></select></div>
+        <div class="field full"><label>รายละเอียดเพิ่มเติม</label><textarea id="gdEdit_desc" rows="3"></textarea></div>
+      </div>
+    </form>
+
+    <div class="hint" style="margin-top:4px;">แก้ไขได้เฉพาะข้อมูลที่นักเรียนกรอก — ไฟล์เกียรติบัตรเดิมจะไม่เปลี่ยน และสถานะจะยังเป็น "รอยืนยันขั้นสุดท้าย" เหมือนเดิม</div>
+
+    <div class="modal-actions">
+      <button type="button" class="btn-secondary" onclick="closeEditActivityModal()">ยกเลิก</button>
+      <button type="button" class="btn-primary" id="gdEditActivitySaveBtn" onclick="saveEditActivity()"><i data-lucide="save" style="width:15px;height:15px"></i>บันทึกการแก้ไข</button>
+    </div>
+  </div>
+</div>
+
+<!-- ตีกลับให้นักเรียนแก้ไขส่งใหม่ -->
+<div class="modal-overlay" id="gdRejectModal">
+  <div class="modal-box">
+    <h3>ตีกลับให้นักเรียนแก้ไข</h3>
+    <div class="hint" id="gdRejectModalWho" style="margin-bottom:8px;"></div>
+    <textarea id="gdRejectReason" rows="3" style="width:100%;" placeholder="เช่น ไฟล์เกียรติบัตรไม่ชัดเจน กรุณาแนบใหม่"></textarea>
+    <div class="modal-actions">
+      <button class="btn-secondary" onclick="closeGdRejectModal()">ยกเลิก</button>
+      <button class="btn-reject" onclick="confirmGdReject()"><i data-lucide="rotate-ccw" style="width:14px;height:14px"></i>ยืนยันตีกลับ</button>
     </div>
   </div>
 </div>
