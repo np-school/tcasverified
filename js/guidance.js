@@ -1,6 +1,11 @@
 lucide.createIcons();
 let ctxGlobal = null;
 
+/* กลุ่มสาระที่ครูแนะแนวยืนยันขั้นแรกแทนครูกลุ่มสาระได้เอง (แท็บ "ตรวจขั้นแรก (แนะแนว)")
+   ต้องตรงกับชื่อกลุ่มสาระใน settings/departments เป๊ะๆ — ถ้าโรงเรียนเปลี่ยนชื่อกลุ่มสาระนี้ ต้องแก้ค่านี้ตาม */
+const GUIDANCE_DEPARTMENT_NAME = "แนะแนว";
+let pendingDeptRejectId = null; // id รายการที่กำลังจะตีกลับในขั้นแรก (แท็บตรวจขั้นแรก)
+
 /* แคชข้อมูลไว้ใช้ร่วมกันหลายส่วน (แดชบอร์ด/รายชื่อนักเรียน/ค้นหา/ส่งออก) กันยิง query ซ้ำ */
 let pendingCache = [];       // dept_confirmed ทั้งหมด (รอยืนยันขั้นสุดท้าย)
 let allStudents = [];        // นักเรียนทั้งหมดในระบบ (จาก collection students)
@@ -35,6 +40,8 @@ guardPage(["guidance", "admin"], (ctx) => {
   loadExportTypeOptions();
   loadDeptOverviewData();
   loadEditFormOptions();
+  loadDeptReviewPending();
+  loadDeptReviewDone();
   setupTabLinks();
   setupRosterControls();
   setupExportControls();
@@ -198,6 +205,129 @@ async function finalApprove(id) {
   } catch (err) {
     console.error(err);
     showToast("ยืนยันไม่สำเร็จ ลองใหม่อีกครั้ง", "error");
+  }
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   ตรวจสอบขั้นแรก (กลุ่มสาระแนะแนว) — ให้ครูแนะแนวยืนยัน/ตีกลับ
+   กิจกรรมที่นักเรียนเลือกกลุ่มสาระ "แนะแนว" ได้เองแทนครูกลุ่มสาระ
+   (เขียนสถานะ/ฟิลด์เหมือนที่ teacher-review.js ทำทุกอย่าง เพื่อให้
+   ประวัติ/รายงาน/ส่งออก อ่านข้อมูลชุดเดียวกันได้โดยไม่ต้องแก้ที่อื่น)
+   ═══════════════════════════════════════════════════════════════ */
+async function loadDeptReviewPending() {
+  try {
+    const snap = await db.collection("activities")
+      .where("status", "==", "submitted")
+      .where("department", "==", GUIDANCE_DEPARTMENT_NAME)
+      .orderBy("createdAt", "asc")
+      .get();
+
+    const body = document.getElementById("deptReviewPendingBody");
+    body.innerHTML = "";
+    document.getElementById("deptReviewPendingCount").textContent = snap.size ? `(${snap.size})` : "";
+    document.getElementById("deptReviewPendingEmpty").style.display = snap.size ? "none" : "block";
+
+    snap.forEach((doc) => {
+      const a = doc.data();
+      const tr = document.createElement("tr");
+      tr.innerHTML = `
+        <td><div style="font-weight:700;">${escapeHtml(a.studentName)}</div><div style="color:var(--text3);font-size:12px;">${escapeHtml(a.studentLevel)} ${escapeHtml(a.studentRoom)}</div></td>
+        <td><div style="font-weight:700;">${escapeHtml(a.title)}</div>${recordDetailLine(a) ? `<div style="color:var(--text3);font-size:12px;margin-top:2px;">${escapeHtml(recordDetailLine(a))}</div>` : ""}</td>
+        <td style="color:var(--text2);">${formatDate(a.createdAt)}</td>
+        <td><a href="${a.certificateUrl}" target="_blank" style="color:var(--accent);font-weight:700;display:flex;align-items:center;gap:5px;"><i data-lucide="file-text" style="width:14px;height:14px"></i>ดูไฟล์</a></td>
+        <td><div style="display:flex;gap:8px;">
+          <button class="btn-approve" onclick="approveDeptReviewActivity('${doc.id}')"><i data-lucide="check" style="width:13px;height:13px"></i>ยืนยัน</button>
+          <button class="btn-reject" onclick="openDeptRejectModal('${doc.id}')"><i data-lucide="x" style="width:13px;height:13px"></i>ตีกลับ</button>
+        </div></td>`;
+      body.appendChild(tr);
+    });
+    lucide.createIcons();
+  } catch (err) {
+    console.error(err);
+    showToast("โหลดรายการรอตรวจสอบขั้นแรกไม่สำเร็จ", "error");
+  }
+}
+
+async function loadDeptReviewDone() {
+  try {
+    const snap = await db.collection("activities")
+      .where("status", "in", ["dept_confirmed", "guidance_confirmed", "revision"])
+      .where("department", "==", GUIDANCE_DEPARTMENT_NAME)
+      .orderBy("deptReviewedAt", "desc")
+      .limit(200)
+      .get();
+
+    const body = document.getElementById("deptReviewDoneBody");
+    body.innerHTML = "";
+    document.getElementById("deptReviewDoneEmpty").style.display = snap.size ? "none" : "block";
+
+    snap.forEach((doc) => {
+      const a = doc.data();
+      const tr = document.createElement("tr");
+      tr.innerHTML = `
+        <td>${escapeHtml(a.studentName)}</td>
+        <td>${escapeHtml(a.title)}</td>
+        <td>${statusBadgeHtml(a.status)}</td>
+        <td style="color:var(--text2);">${escapeHtml(a.deptReviewerEmail || "")}</td>
+        <td style="color:var(--text2);">${formatDate(a.deptReviewedAt)}</td>`;
+      body.appendChild(tr);
+    });
+    lucide.createIcons();
+  } catch (err) {
+    console.error(err);
+  }
+}
+
+/** ยืนยันขั้นแรกแทนครูกลุ่มสาระแนะแนว — เขียนฟิลด์ deptReviewer* เหมือนที่ teacher-review.js ทำทุกอย่าง
+    เพื่อให้รายการไปต่อคิว "รอยืนยันขั้นสุดท้าย" ได้ตามปกติ (คนละคนหรือคนเดียวกันยืนยันต่อก็ได้) */
+async function approveDeptReviewActivity(id) {
+  try {
+    await db.collection("activities").doc(id).update({
+      status: "dept_confirmed",
+      deptReviewerEmail: ctxGlobal.user.email,
+      deptReviewedAt: firebase.firestore.FieldValue.serverTimestamp(),
+    });
+    showToast("ยืนยันขั้นแรกแล้ว รายการไปรอยืนยันขั้นสุดท้ายต่อได้เลย", "success");
+    loadDeptReviewPending();
+    loadDeptReviewDone();
+    loadPending();
+    loadDeptOverviewData();
+  } catch (err) {
+    console.error(err);
+    showToast("ยืนยันไม่สำเร็จ ลองใหม่อีกครั้ง", "error");
+  }
+}
+
+function openDeptRejectModal(id) {
+  pendingDeptRejectId = id;
+  document.getElementById("gdDeptRejectReason").value = "";
+  document.getElementById("gdDeptRejectModal").classList.add("open");
+}
+function closeDeptRejectModal() {
+  document.getElementById("gdDeptRejectModal").classList.remove("open");
+  pendingDeptRejectId = null;
+}
+async function confirmDeptReject() {
+  const reason = document.getElementById("gdDeptRejectReason").value.trim();
+  if (!reason) {
+    showToast("กรุณาระบุเหตุผลที่ตีกลับ", "error");
+    return;
+  }
+  try {
+    await db.collection("activities").doc(pendingDeptRejectId).update({
+      status: "revision",
+      revisionReason: reason,
+      deptReviewerEmail: ctxGlobal.user.email,
+      deptReviewedAt: firebase.firestore.FieldValue.serverTimestamp(),
+    });
+    showToast("ตีกลับรายการแล้ว", "success");
+    closeDeptRejectModal();
+    loadDeptReviewPending();
+    loadDeptReviewDone();
+    loadDeptOverviewData();
+  } catch (err) {
+    console.error(err);
+    showToast("ตีกลับไม่สำเร็จ ลองใหม่อีกครั้ง", "error");
   }
 }
 

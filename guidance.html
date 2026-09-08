@@ -69,6 +69,7 @@
   <div class="sidebar" id="sidebar">
     <button class="sidebar-close-btn" onclick="closeSidebar()"><i data-lucide="x" style="width:16px;height:16px"></i></button>
     <button class="sidebar-btn active staff" data-tab="dashboard"><i data-lucide="layout-dashboard" style="width:18px;height:18px"></i>แดชบอร์ด</button>
+    <button class="sidebar-btn" data-tab="deptreview"><i data-lucide="clipboard-check" style="width:18px;height:18px"></i>ตรวจขั้นแรก (แนะแนว) <span id="deptReviewPendingCount" style="margin-left:auto;"></span></button>
     <button class="sidebar-btn" data-tab="pending"><i data-lucide="inbox" style="width:18px;height:18px"></i>รอยืนยันขั้นสุดท้าย <span id="pendingCount" style="margin-left:auto;"></span></button>
     <button class="sidebar-btn" data-tab="roster"><i data-lucide="users" style="width:18px;height:18px"></i>รายชื่อนักเรียน</button>
     <button class="sidebar-btn" data-tab="all"><i data-lucide="list-checks" style="width:18px;height:18px"></i>ประวัติการยืนยันทั้งหมด</button>
@@ -120,6 +121,27 @@
           <div id="gdQuickResults" style="margin-top:10px;display:flex;flex-direction:column;gap:2px;"></div>
         </div>
       </div>
+    </div>
+
+    <div class="tab-panel" id="tab-deptreview">
+      <div class="page-header"><div class="page-title">ตรวจสอบขั้นแรก (กลุ่มสาระแนะแนว)</div><div class="page-sub">เฉพาะกิจกรรมที่นักเรียนเลือกกลุ่มสาระ "แนะแนว" — ครูแนะแนวยืนยันขั้นแรกแทนครูกลุ่มสาระแนะแนวได้เลยในหน้านี้ ก่อนไปยืนยันขั้นสุดท้ายอีกที</div></div>
+
+      <div class="card" style="padding:0;overflow:hidden;margin-bottom:22px;">
+        <table id="deptReviewPendingTable">
+          <thead><tr><th>นักเรียน</th><th>กิจกรรม</th><th>วันที่ยื่น</th><th>เกียรติบัตร</th><th>ดำเนินการ</th></tr></thead>
+          <tbody id="deptReviewPendingBody"></tbody>
+        </table>
+      </div>
+      <div id="deptReviewPendingEmpty" class="empty-state" style="display:none;margin-bottom:22px;"><i data-lucide="inbox" style="width:36px;height:36px;margin-bottom:10px;"></i><div>ไม่มีรายการรอตรวจสอบขั้นแรกตอนนี้</div></div>
+
+      <div class="page-header" style="margin-bottom:12px;"><div class="page-title" style="font-size:15px;">ตรวจแล้ว (กลุ่มสาระแนะแนว)</div></div>
+      <div class="card" style="padding:0;overflow:hidden;">
+        <table>
+          <thead><tr><th>นักเรียน</th><th>กิจกรรม</th><th>ผลตรวจ</th><th>ตรวจโดย</th><th>วันที่ตรวจ</th></tr></thead>
+          <tbody id="deptReviewDoneBody"></tbody>
+        </table>
+      </div>
+      <div id="deptReviewDoneEmpty" class="empty-state" style="display:none;"><i data-lucide="inbox" style="width:36px;height:36px;margin-bottom:10px;"></i><div>ยังไม่มีประวัติการตรวจขั้นแรก</div></div>
     </div>
 
     <div class="tab-panel" id="tab-pending">
@@ -326,6 +348,18 @@
     <div class="modal-actions">
       <button class="btn-secondary" onclick="closeGdRejectModal()">ยกเลิก</button>
       <button class="btn-reject" onclick="confirmGdReject()"><i data-lucide="rotate-ccw" style="width:14px;height:14px"></i>ยืนยันตีกลับ</button>
+    </div>
+  </div>
+</div>
+
+<!-- ตีกลับขั้นแรก (กลุ่มสาระแนะแนว) -->
+<div class="modal-overlay" id="gdDeptRejectModal">
+  <div class="modal-box">
+    <h3>ระบุเหตุผลที่ตีกลับ (ขั้นแรก)</h3>
+    <textarea id="gdDeptRejectReason" rows="3" style="width:100%;" placeholder="เช่น ไฟล์เกียรติบัตรไม่ชัดเจน กรุณาแนบใหม่"></textarea>
+    <div class="modal-actions">
+      <button class="btn-secondary" onclick="closeDeptRejectModal()">ยกเลิก</button>
+      <button class="btn-reject" onclick="confirmDeptReject()"><i data-lucide="rotate-ccw" style="width:14px;height:14px"></i>ยืนยันตีกลับ</button>
     </div>
   </div>
 </div>
