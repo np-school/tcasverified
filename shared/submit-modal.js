@@ -275,7 +275,17 @@ function fillSubmitModalSelect(id, values) {
 function buildSubmitModalYearOptions() {
   const el = document.getElementById("sm_f_year");
   el.innerHTML = "";
-  for (let y = CURRENT_ACADEMIC_YEAR; y >= CURRENT_ACADEMIC_YEAR - 1; y--) {
+
+  // คำนวณย้อนหลังตามระดับชั้น อิงจาก ม.6 = ย้อนหลังได้สูงสุด 3 ปี (ม.4, ม.5, ม.6)
+  // ม.6 → yearsBack = 2  (ส่งได้: ปีปัจจุบัน, -1, -2)
+  // ม.5 → yearsBack = 1  (ส่งได้: ปีปัจจุบัน, -1)
+  // ม.4 → yearsBack = 0  (ส่งได้: ปีปัจจุบันเท่านั้น)
+  const level = __submitModalCtx?.profile?.level || "";
+  const gradeMatch = level.match(/(\d)/);                    // จับตัวเลข 4 / 5 / 6 จากชื่อระดับชั้น
+  const grade = gradeMatch ? parseInt(gradeMatch[1], 10) : 6; // ถ้าไม่รู้ให้ default ม.6 (เปิดกว้างสุด)
+  const yearsBack = Math.max(0, grade - 4);                  // ม.4→0, ม.5→1, ม.6→2
+
+  for (let y = CURRENT_ACADEMIC_YEAR; y >= CURRENT_ACADEMIC_YEAR - yearsBack; y--) {
     const opt = document.createElement("option");
     opt.value = y;
     opt.textContent = "ปีการศึกษา " + y;
