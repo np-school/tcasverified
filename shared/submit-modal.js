@@ -283,7 +283,7 @@ function buildSubmitModalYearOptions() {
   const level = __submitModalCtx?.profile?.level || "";
   const gradeMatch = level.match(/(\d)/);                    // จับตัวเลข 4 / 5 / 6 จากชื่อระดับชั้น
   const grade = gradeMatch ? parseInt(gradeMatch[1], 10) : 6; // ถ้าไม่รู้ให้ default ม.6 (เปิดกว้างสุด)
-  const yearsBack = Math.max(0, grade - 4);                  // ม.4→0, ม.5→1, ม.6→2
+  const yearsBack = Math.max(0, grade - 3);                  // ม.4→1, ม.5→2, ม.6→3 (ม.6 ย้อนหลัง 4 ปี)
 
   for (let y = CURRENT_ACADEMIC_YEAR; y >= CURRENT_ACADEMIC_YEAR - yearsBack; y--) {
     const opt = document.createElement("option");
